@@ -67,9 +67,11 @@ view model =
     , button [onClick (Move NORTHWEST)] [text "NORTHWEST"]
     ]
   , div [] [text (toString model.ship)]
-  , div [] [text (getRotation model.ship.direction)]
   , img
     [ src "img/ship.svg"
-    , style [("width", "50px")]
+    , style
+      [ ("width", "50px")
+      , ("transform", (getRotation model.ship.direction))
+      ]
     ] []
   ]
