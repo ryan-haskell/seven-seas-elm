@@ -71,6 +71,10 @@ view model =
     [ src "img/ship.svg"
     , style
       [ ("width", "50px")
+      , ("position", "absolute")
+      , ("top", (toString (model.ship.location.y * 50)) ++ "px")
+      , ("left", (toString (model.ship.location.x * 50)) ++ "px")
+      , ("transition", "top .5s, left .5s")
       , ("transform", (getRotation model.ship.direction))
       ]
     ] []
