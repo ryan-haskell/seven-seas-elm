@@ -4,25 +4,35 @@ import Html exposing (..)
 import Html.App as App
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import String
+import Random
 
 import Direction
 import Direction exposing (Direction(..))
 import Location exposing (Location)
 import Map
 import Map exposing (Map)
+import Actor exposing (Actor, ActorType(..))
+
 
 
 -- MODEL
 type alias Model =
-  { map: Map }
+  { map: Map
+  , randomSeed: Int
+  }
 
 init : (Model, Cmd Msg)
-init = (Model (Map.initializeMap 7 1), Cmd.none)
+init =
+  (  Model (Map.initializeMap 7 1 0) 0
+  , (Random.generate SetRandomSeed (Random.int Random.minInt Random.maxInt))
+  )
 
 
 -- UPDATE
 type Msg
   = TileClicked Int Int
+  | SetRandomSeed Int
   | None
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -30,6 +40,10 @@ update msg model =
   case msg of
     TileClicked x y ->
       ({ model | map = Map.movePlayer x y model.map }, Cmd.none)
+    SetRandomSeed seed ->
+      ({ model
+        | map = Map.initializeMap 7 1 seed
+        , randomSeed = seed }, Cmd.none)
     None ->
       (model, Cmd.none)
 
@@ -88,6 +102,33 @@ getTileSize: Int -> String
 getTileSize size =
   "calc( 100vmin / " ++ toString size ++ " )"
 
+
+viewActor: Actor -> Int -> (Html Msg)
+viewActor actor mapSize =
+  (img
+    [ src ("img/" ++ (String.toLower (toString actor.subtype)) ++ ".svg")
+    , style
+      [ ("width", getTileSize mapSize)
+      , ("height", getTileSize mapSize)
+      , ("position", "absolute")
+      , ("top", getOffset mapSize actor.location.y)
+      , ("left", getOffset mapSize actor.location.x)
+      , ("transition", "top .5s, left .5s")
+      , ("transform", (Direction.getTransformRotation actor.direction))
+      ]
+    ]
+    []
+  )
+
+viewActors: List Actor -> Int -> Int -> List (Html Msg)
+viewActors actors mapSize randomInt =
+  if randomInt /= 0 then
+    List.map
+      (\actor -> (viewActor actor mapSize))
+    actors
+  else []
+
+
 view: Model -> Html Msg
 view model =
   let
@@ -97,11 +138,12 @@ view model =
       model.map.size
   in
     div [ class "game"
+        , attribute "seed" (toString model.randomSeed)
         , style
           [ ("height", "100%")
+          , ("overflow", "hidden")
           ]
         ]
-    --[ --div [] []-- text (toString player) ]
     [ viewMapTiles model.map.tiles
     , div
       [ class "actors"
@@ -116,21 +158,9 @@ view model =
         , ("visibility", "hidden")
         ]
       ]
-      [ div [ style [("visibility", "visible")] ]
-        [ img
-          [ src "img/ship.svg"
-          , style
-            [ ("width", getTileSize mapSize)
-            , ("height", getTileSize mapSize)
-            , ("position", "absolute")
-            , ("top", getOffset mapSize player.location.y)
-            , ("left", getOffset mapSize player.location.x)
-            , ("transition", "top .5s, left .5s")
-            , ("transform", (Direction.getTransformRotation player.direction))
-            ]
-          ]
-          []
-        ]
+      [ div
+        [ style [("visibility", "visible")] ]
+        (viewActors model.map.actors mapSize model.randomSeed)
       ]
    ]
 

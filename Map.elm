@@ -17,19 +17,18 @@ type alias Map =
   }
 
 
-initializeMap: Int -> Int -> Map
-initializeMap size level =
+initializeMap: Int -> Int -> Int -> Map
+initializeMap size level seed =
   let
-    --islands =
-    --  generateIslands size
-    --pirates =
-    --  generatePirates size level
+    islands =
+      generateIslands size seed
+    pirates =
+      []
+      --generatePirates size level
     player =
       initializePlayer size
     actors =
-      [player]
-    --actors =
-    --  islands ++ pirates ++ player
+      islands ++ pirates ++ [player]
     tiles =
       initializeTiles size
   in
@@ -98,5 +97,54 @@ movePlayer x y map =
     else map
 
 
--- generateIslands: Int -> List Actor
--- generateIslands size =
+generateIslands: Int -> Int -> List Actor
+generateIslands size seedNum =
+  let
+    seed = Random.initialSeed seedNum
+
+    minIslands =
+      (size * size * 5 // 100)
+
+    maxIslands =
+      (size * size * 15 // 100)
+
+    (numIslands, seed1) =
+      Random.step (Random.int minIslands maxIslands) (Random.initialSeed seedNum)
+
+    -- Generate a random seed for each island
+    seeds =
+      makeSeeds seed1 numIslands
+    z = Debug.log "seedNum" seedNum
+    a = Debug.log "minIslands: " minIslands
+    b = Debug.log "maxIslands: " maxIslands
+    c = Debug.log "NumIslands: " numIslands
+
+    islands =
+      List.map (generateIsland size) seeds
+  in
+    islands
+
+makeSeeds: Random.Seed -> Int -> List Random.Seed
+makeSeeds seed numSeeds =
+  makeSeedsHelper seed numSeeds 0 []
+
+makeSeedsHelper: Random.Seed -> Int -> Int -> List Random.Seed -> List Random.Seed
+makeSeedsHelper seed maxIndex index seeds =
+  let
+    (num, newSeed) =
+      Random.step (Random.int Random.minInt Random.maxInt) seed
+  in
+    if index == maxIndex then
+      seeds
+    else
+      makeSeedsHelper newSeed maxIndex (index+1) (List.append seeds [newSeed])
+
+generateIsland: Int -> Random.Seed -> Actor
+generateIsland size seed =
+  let
+    (x, seed1) =
+      Random.step (Random.int 1 (size-2)) seed
+    (y, seed2) =
+      Random.step (Random.int 1 (size-2)) seed1
+  in
+    Actor ISLAND (Location x y) NORTH
