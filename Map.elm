@@ -17,11 +17,9 @@ type alias Map =
   }
 
 
-initializeMap: Int -> Map
-initializeMap level =
+initializeMap: Int -> Int -> Map
+initializeMap size level =
   let
-    size =
-      9
     --islands =
     --  generateIslands size
     --pirates =

@@ -17,7 +17,7 @@ type alias Model =
   { map: Map }
 
 init : (Model, Cmd Msg)
-init = (Model (Map.initializeMap 1), Cmd.none)
+init = (Model (Map.initializeMap 7 1), Cmd.none)
 
 
 -- UPDATE
@@ -71,6 +71,7 @@ viewMapTiles listOfRows =
         , ("marginTop", "calc((100vh - 100vmin)/2)")
         , ("display", "flex")
         , ("flex-direction", "column")
+        , ("background-color", "#069")
         ]
       ]
   (
