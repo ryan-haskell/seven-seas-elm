@@ -1,8 +1,8 @@
-module Direction exposing(Direction(..), getIndex)
+module Direction exposing(Direction(..), getIndex, getTransformRotation)
 
 import List.Extra
 
--- Directions
+
 type Direction
   = NORTH
   | NORTHEAST
@@ -29,3 +29,20 @@ getIndex dir =
       ]
   in
     List.Extra.elemIndex dir directionList
+
+
+getTransformRotation: Direction -> String
+getTransformRotation dir =
+  let
+    prefix =
+      "rotate("
+    suffix =
+      "deg)"
+    angle =
+      case (getIndex dir) of
+        Just index ->
+          index*45
+        Nothing ->
+          0
+  in
+    prefix ++ (toString angle) ++ suffix

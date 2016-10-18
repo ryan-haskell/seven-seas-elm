@@ -2,48 +2,49 @@ module Location exposing (Location, move)
 
 import Direction exposing (..)
 
--- Location
+
 type alias Location =
-  { x: Float
-  , y: Float
+  { x: Int
+  , y: Int
   }
+
 
 move: Direction -> Location -> Location
 move dir loc =
   case dir of
     NORTH ->
-      { loc 
-        | y = loc.y - 1 
+      { loc
+        | y = loc.y - 1
       }
     SOUTH ->
-      { loc 
-        | y = loc.y + 1 
+      { loc
+        | y = loc.y + 1
       }
     WEST ->
-      { loc 
-        | x = loc.x - 1 
+      { loc
+        | x = loc.x - 1
       }
     EAST ->
-      { loc 
-        | x = loc.x + 1 
+      { loc
+        | x = loc.x + 1
       }
     NORTHWEST ->
-      { loc 
+      { loc
         | x = loc.x - 1
-        , y = loc.y - 1 
+        , y = loc.y - 1
       }
     SOUTHEAST ->
-      { loc 
+      { loc
         | x = loc.x + 1
-        , y = loc.y + 1 
+        , y = loc.y + 1
       }
     NORTHEAST ->
-      { loc 
+      { loc
         | x = loc.x + 1
-        , y = loc.y - 1 
+        , y = loc.y - 1
       }
     SOUTHWEST ->
-      { loc 
+      { loc
         | x = loc.x - 1
-        , y = loc.y + 1 
+        , y = loc.y + 1
       }
