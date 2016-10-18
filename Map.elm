@@ -33,7 +33,7 @@ initializeMap level =
     --actors =
     --  islands ++ pirates ++ player
     tiles =
-      [[]]
+      initializeTiles size
   in
     Map size level actors tiles
 
@@ -41,6 +41,19 @@ initializeMap level =
 initializePlayer: Int -> Actor
 initializePlayer mapSize =
   Actor PLAYER (Location (mapSize // 2) (mapSize // 2)) SOUTH
+
+
+initializeTiles: Int -> List (List Location)
+initializeTiles mapSize =
+  let
+    tiles =
+      List.map
+        (\col -> List.map
+          (\row -> Location row col)
+          [0..mapSize-1])
+        [0..mapSize-1]
+  in
+    tiles
 
 
 getPlayer: Map -> Actor
@@ -66,24 +79,25 @@ getPlayer map =
     player
 
 
-movePlayer: Direction -> Map -> Map
-movePlayer dir map =
+movePlayer: Int -> Int -> Map -> Map
+movePlayer x y map =
   let
-
     player =
       getPlayer map
-
     nonPlayerActors =
       List.filter (\actor -> not(Actor.isPlayer actor)) map.actors
-
+    isAdjacentTile =
+      Location.isAdjacentTile (player.location) (Location x y)
+    dir =
+      Location.getDirection (player.location) (Location x y)
     updatedPlayer =
       Actor.move dir player
-
     updatedActors =
       nonPlayerActors ++ [updatedPlayer]
-
   in
-    { map | actors = updatedActors }
+    if isAdjacentTile then
+      { map | actors = updatedActors }
+    else map
 
 
 -- generateIslands: Int -> List Actor
