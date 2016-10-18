@@ -114,15 +114,14 @@ generateIslands size seedNum =
     -- Generate a random seed for each island
     seeds =
       makeSeeds seed1 numIslands
-    z = Debug.log "seedNum" seedNum
-    a = Debug.log "minIslands: " minIslands
-    b = Debug.log "maxIslands: " maxIslands
-    c = Debug.log "NumIslands: " numIslands
 
     islands =
       List.map (generateIsland size) seeds
+
   in
-    islands
+    List.filter
+      (\actor -> not (actor.location.x == size // 2 && actor.location.y == size // 2))
+      islands
 
 makeSeeds: Random.Seed -> Int -> List Random.Seed
 makeSeeds seed numSeeds =

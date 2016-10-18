@@ -10001,21 +10001,108 @@ var _user$project$Actor$ISLAND = {ctor: 'ISLAND'};
 var _user$project$Actor$PIRATE = {ctor: 'PIRATE'};
 var _user$project$Actor$PLAYER = {ctor: 'PLAYER'};
 var _user$project$Actor$isPlayer = _user$project$Actor$isSubtype(_user$project$Actor$PLAYER);
+var _user$project$Map$generateIsland = F2(
+	function (size, seed) {
+		var _p0 = A2(
+			_elm_lang$core$Random$step,
+			A2(_elm_lang$core$Random$int, 1, size - 2),
+			seed);
+		var x = _p0._0;
+		var seed1 = _p0._1;
+		var _p1 = A2(
+			_elm_lang$core$Random$step,
+			A2(_elm_lang$core$Random$int, 1, size - 2),
+			seed1);
+		var y = _p1._0;
+		var seed2 = _p1._1;
+		return A3(
+			_user$project$Actor$Actor,
+			_user$project$Actor$ISLAND,
+			A2(_user$project$Location$Location, x, y),
+			_user$project$Direction$NORTH);
+	});
+var _user$project$Map$makeSeedsHelper = F4(
+	function (seed, maxIndex, index, seeds) {
+		makeSeedsHelper:
+		while (true) {
+			var _p2 = A2(
+				_elm_lang$core$Random$step,
+				A2(_elm_lang$core$Random$int, _elm_lang$core$Random$minInt, _elm_lang$core$Random$maxInt),
+				seed);
+			var num = _p2._0;
+			var newSeed = _p2._1;
+			if (_elm_lang$core$Native_Utils.eq(index, maxIndex)) {
+				return seeds;
+			} else {
+				var _v0 = newSeed,
+					_v1 = maxIndex,
+					_v2 = index + 1,
+					_v3 = A2(
+					_elm_lang$core$List$append,
+					seeds,
+					_elm_lang$core$Native_List.fromArray(
+						[newSeed]));
+				seed = _v0;
+				maxIndex = _v1;
+				index = _v2;
+				seeds = _v3;
+				continue makeSeedsHelper;
+			}
+		}
+	});
+var _user$project$Map$makeSeeds = F2(
+	function (seed, numSeeds) {
+		return A4(
+			_user$project$Map$makeSeedsHelper,
+			seed,
+			numSeeds,
+			0,
+			_elm_lang$core$Native_List.fromArray(
+				[]));
+	});
+var _user$project$Map$generateIslands = F2(
+	function (size, seedNum) {
+		var z = A2(_elm_lang$core$Debug$log, 'seedNum', seedNum);
+		var maxIslands = (((size * size) * 15) / 100) | 0;
+		var b = A2(_elm_lang$core$Debug$log, 'maxIslands: ', maxIslands);
+		var minIslands = (((size * size) * 5) / 100) | 0;
+		var _p3 = A2(
+			_elm_lang$core$Random$step,
+			A2(_elm_lang$core$Random$int, minIslands, maxIslands),
+			_elm_lang$core$Random$initialSeed(seedNum));
+		var numIslands = _p3._0;
+		var seed1 = _p3._1;
+		var seeds = A2(_user$project$Map$makeSeeds, seed1, numIslands);
+		var islands = A2(
+			_elm_lang$core$List$map,
+			_user$project$Map$generateIsland(size),
+			seeds);
+		var c = A2(_elm_lang$core$Debug$log, 'NumIslands: ', numIslands);
+		var a = A2(_elm_lang$core$Debug$log, 'minIslands: ', minIslands);
+		var seed = _elm_lang$core$Random$initialSeed(seedNum);
+		return A2(
+			_elm_lang$core$List$filter,
+			function (actor) {
+				return _elm_lang$core$Basics$not(
+					_elm_lang$core$Native_Utils.eq(actor.location.x, (size / 2) | 0) && _elm_lang$core$Native_Utils.eq(actor.location.y, (size / 2) | 0));
+			},
+			islands);
+	});
 var _user$project$Map$getPlayer = function (map) {
 	var actors = map.actors;
 	var players = A2(_elm_lang$core$List$filter, _user$project$Actor$isPlayer, actors);
 	var player = function () {
-		var _p0 = _elm_lang$core$List$head(players);
-		if (_p0.ctor === 'Nothing') {
+		var _p4 = _elm_lang$core$List$head(players);
+		if (_p4.ctor === 'Nothing') {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Map',
 				{
-					start: {line: 70, column: 7},
-					end: {line: 74, column: 16}
+					start: {line: 69, column: 7},
+					end: {line: 73, column: 16}
 				},
-				_p0)('No player found');
+				_p4)('No player found');
 		} else {
-			return _p0._0;
+			return _p4._0;
 		}
 	}();
 	return player;
@@ -10073,12 +10160,21 @@ var _user$project$Map$Map = F4(
 	function (a, b, c, d) {
 		return {size: a, level: b, actors: c, tiles: d};
 	});
-var _user$project$Map$initializeMap = F2(
-	function (size, level) {
+var _user$project$Map$initializeMap = F3(
+	function (size, level, seed) {
 		var tiles = _user$project$Map$initializeTiles(size);
 		var player = _user$project$Map$initializePlayer(size);
-		var actors = _elm_lang$core$Native_List.fromArray(
-			[player]);
+		var pirates = _elm_lang$core$Native_List.fromArray(
+			[]);
+		var islands = A2(_user$project$Map$generateIslands, size, seed);
+		var actors = A2(
+			_elm_lang$core$Basics_ops['++'],
+			islands,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				pirates,
+				_elm_lang$core$Native_List.fromArray(
+					[player])));
 		return A4(_user$project$Map$Map, size, level, actors, tiles);
 	});
 var _user$project$Main$getTileSize = function (size) {
@@ -10106,33 +10202,115 @@ var _user$project$Main$getOffset = F2(
 						_elm_lang$core$Basics$toString(size),
 						' )'))));
 	});
+var _user$project$Main$viewActor = F2(
+	function (actor, mapSize) {
+		return A2(
+			_elm_lang$html$Html$img,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html_Attributes$src(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'img/',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$String$toLower(
+								_elm_lang$core$Basics$toString(actor.subtype)),
+							'.svg'))),
+					_elm_lang$html$Html_Attributes$style(
+					_elm_lang$core$Native_List.fromArray(
+						[
+							{
+							ctor: '_Tuple2',
+							_0: 'width',
+							_1: _user$project$Main$getTileSize(mapSize)
+						},
+							{
+							ctor: '_Tuple2',
+							_0: 'height',
+							_1: _user$project$Main$getTileSize(mapSize)
+						},
+							{ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
+							{
+							ctor: '_Tuple2',
+							_0: 'top',
+							_1: A2(_user$project$Main$getOffset, mapSize, actor.location.y)
+						},
+							{
+							ctor: '_Tuple2',
+							_0: 'left',
+							_1: A2(_user$project$Main$getOffset, mapSize, actor.location.x)
+						},
+							{ctor: '_Tuple2', _0: 'transition', _1: 'top .5s, left .5s'},
+							{
+							ctor: '_Tuple2',
+							_0: 'transform',
+							_1: _user$project$Direction$getTransformRotation(actor.direction)
+						}
+						]))
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[]));
+	});
+var _user$project$Main$viewActors = F3(
+	function (actors, mapSize, randomInt) {
+		return (!_elm_lang$core$Native_Utils.eq(randomInt, 0)) ? A2(
+			_elm_lang$core$List$map,
+			function (actor) {
+				return A2(_user$project$Main$viewActor, actor, mapSize);
+			},
+			actors) : _elm_lang$core$Native_List.fromArray(
+			[]);
+	});
 var _user$project$Main$update = F2(
 	function (msg, model) {
 		var _p0 = msg;
-		if (_p0.ctor === 'TileClicked') {
-			return {
-				ctor: '_Tuple2',
-				_0: _elm_lang$core$Native_Utils.update(
-					model,
-					{
-						map: A3(_user$project$Map$movePlayer, _p0._0, _p0._1, model.map)
-					}),
-				_1: _elm_lang$core$Platform_Cmd$none
-			};
-		} else {
-			return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+		switch (_p0.ctor) {
+			case 'TileClicked':
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							map: A3(_user$project$Map$movePlayer, _p0._0, _p0._1, model.map)
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'SetRandomSeed':
+				var _p1 = _p0._0;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							map: A3(_user$project$Map$initializeMap, 7, 1, _p1),
+							randomSeed: _p1
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			default:
+				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 		}
 	});
-var _user$project$Main$Model = function (a) {
-	return {map: a};
+var _user$project$Main$Model = F2(
+	function (a, b) {
+		return {map: a, randomSeed: b};
+	});
+var _user$project$Main$None = {ctor: 'None'};
+var _user$project$Main$SetRandomSeed = function (a) {
+	return {ctor: 'SetRandomSeed', _0: a};
 };
 var _user$project$Main$init = {
 	ctor: '_Tuple2',
-	_0: _user$project$Main$Model(
-		A2(_user$project$Map$initializeMap, 7, 1)),
-	_1: _elm_lang$core$Platform_Cmd$none
+	_0: A2(
+		_user$project$Main$Model,
+		A3(_user$project$Map$initializeMap, 7, 1, 0),
+		0),
+	_1: A2(
+		_elm_lang$core$Random$generate,
+		_user$project$Main$SetRandomSeed,
+		A2(_elm_lang$core$Random$int, _elm_lang$core$Random$minInt, _elm_lang$core$Random$maxInt))
 };
-var _user$project$Main$None = {ctor: 'None'};
 var _user$project$Main$TileClicked = F2(
 	function (a, b) {
 		return {ctor: 'TileClicked', _0: a, _1: b};
@@ -10217,10 +10395,15 @@ var _user$project$Main$view = function (model) {
 		_elm_lang$core$Native_List.fromArray(
 			[
 				_elm_lang$html$Html_Attributes$class('game'),
+				A2(
+				_elm_lang$html$Html_Attributes$attribute,
+				'seed',
+				_elm_lang$core$Basics$toString(model.randomSeed)),
 				_elm_lang$html$Html_Attributes$style(
 				_elm_lang$core$Native_List.fromArray(
 					[
-						{ctor: '_Tuple2', _0: 'height', _1: '100%'}
+						{ctor: '_Tuple2', _0: 'height', _1: '100%'},
+						{ctor: '_Tuple2', _0: 'overflow', _1: 'hidden'}
 					]))
 			]),
 		_elm_lang$core$Native_List.fromArray(
@@ -10256,48 +10439,7 @@ var _user$project$Main$view = function (model) {
 										{ctor: '_Tuple2', _0: 'visibility', _1: 'visible'}
 									]))
 							]),
-						_elm_lang$core$Native_List.fromArray(
-							[
-								A2(
-								_elm_lang$html$Html$img,
-								_elm_lang$core$Native_List.fromArray(
-									[
-										_elm_lang$html$Html_Attributes$src('img/ship.svg'),
-										_elm_lang$html$Html_Attributes$style(
-										_elm_lang$core$Native_List.fromArray(
-											[
-												{
-												ctor: '_Tuple2',
-												_0: 'width',
-												_1: _user$project$Main$getTileSize(mapSize)
-											},
-												{
-												ctor: '_Tuple2',
-												_0: 'height',
-												_1: _user$project$Main$getTileSize(mapSize)
-											},
-												{ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
-												{
-												ctor: '_Tuple2',
-												_0: 'top',
-												_1: A2(_user$project$Main$getOffset, mapSize, player.location.y)
-											},
-												{
-												ctor: '_Tuple2',
-												_0: 'left',
-												_1: A2(_user$project$Main$getOffset, mapSize, player.location.x)
-											},
-												{ctor: '_Tuple2', _0: 'transition', _1: 'top .5s, left .5s'},
-												{
-												ctor: '_Tuple2',
-												_0: 'transform',
-												_1: _user$project$Direction$getTransformRotation(player.direction)
-											}
-											]))
-									]),
-								_elm_lang$core$Native_List.fromArray(
-									[]))
-							]))
+						A3(_user$project$Main$viewActors, model.map.actors, mapSize, model.randomSeed))
 					]))
 			]));
 };
@@ -10307,7 +10449,7 @@ var _user$project$Main$main = {
 			init: _user$project$Main$init,
 			update: _user$project$Main$update,
 			view: _user$project$Main$view,
-			subscriptions: function (_p1) {
+			subscriptions: function (_p2) {
 				return _elm_lang$core$Platform_Sub$none;
 			}
 		})
