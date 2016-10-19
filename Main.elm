@@ -6,6 +6,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import String
 import Random
+import Time
 
 import Direction
 import Direction exposing (Direction(..))
@@ -20,11 +21,12 @@ import Actor exposing (Actor, ActorType(..))
 type alias Model =
   { map: Map
   , randomSeed: Int
+  , whirlpoolAngle: Int
   }
 
 init : (Model, Cmd Msg)
 init =
-  (  Model (Map.initializeMap 7 1 0) 0
+  (  Model (Map.initializeMap 7 1 0) 0 0
   , (Random.generate SetRandomSeed (Random.int Random.minInt Random.maxInt))
   )
 
@@ -34,6 +36,7 @@ type Msg
   = TileClicked Int Int
   | ActorClicked Actor
   | SetRandomSeed Int
+  | RotateWhirlpool Time.Time
   | None
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -53,6 +56,8 @@ update msg model =
       ({ model
         | map = Map.initializeMap 7 1 seed
         , randomSeed = seed }, Cmd.none)
+    RotateWhirlpool time ->
+      ({model | whirlpoolAngle = model.whirlpoolAngle + 45}, Cmd.none)
     None ->
       (model, Cmd.none)
 
@@ -112,29 +117,67 @@ getTileSize size =
   "calc( 100vmin / " ++ toString size ++ " )"
 
 
-viewActor: Actor -> Int -> (Html Msg)
-viewActor actor mapSize =
-  (img
-    [ src ("img/" ++ (String.toLower (toString actor.subtype)) ++ ".svg")
-    , style
-      [ ("width", getTileSize mapSize)
-      , ("height", getTileSize mapSize)
-      , ("position", "absolute")
-      , ("top", getOffset mapSize actor.location.y)
-      , ("left", getOffset mapSize actor.location.x)
-      , ("transition", "top .5s, left .5s")
-      , ("transform", (Direction.getTransformRotation actor.direction))
-      ]
-    , onClick (ActorClicked actor)
-    ]
-    []
-  )
+viewActor: Int -> Actor -> Int -> (Html Msg)
+viewActor whirlpoolAngle actor mapSize =
+  let
 
-viewActors: List Actor -> Int -> Int -> List (Html Msg)
-viewActors actors mapSize randomInt =
+    onWhirlpool =
+      Actor.onWhirlpool actor mapSize
+
+    (whirlpoolTransition, defaultTransition) =
+      ("transform .5s", "top .5s, left .5s")
+
+    transition =
+      case actor.subtype of
+        WHIRLPOOL ->
+          whirlpoolTransition
+        -- PLAYER ->
+        --   if onWhirlpool then
+        --     whirlpoolTransition
+        --   else
+        --     defaultTransition
+        _ ->
+          defaultTransition
+
+    whirlpoolTransform =
+      "rotate(" ++ (toString whirlpoolAngle) ++ "deg)"
+
+    directionTransform =
+      (Direction.getTransformRotation actor.direction)
+
+    transform =
+      case actor.subtype of
+        WHIRLPOOL ->
+          whirlpoolTransform
+        PLAYER ->
+          if onWhirlpool then
+            whirlpoolTransform
+          else directionTransform
+        _ ->
+          directionTransform
+
+  in
+    (img
+      [ src ("img/" ++ (String.toLower (toString actor.subtype)) ++ ".svg")
+      , style
+        [ ("width", getTileSize mapSize)
+        , ("height", getTileSize mapSize)
+        , ("position", "absolute")
+        , ("top", getOffset mapSize actor.location.y)
+        , ("left", getOffset mapSize actor.location.x)
+        , ("transition", transition)
+        , ("transform", transform)
+        ]
+      , onClick (ActorClicked actor)
+      ]
+      []
+    )
+
+viewActors: Int -> List Actor -> Int -> Int -> List (Html Msg)
+viewActors whirlpoolAngle actors mapSize randomInt =
   if randomInt /= 0 then
     List.map
-      (\actor -> (viewActor actor mapSize))
+      (\actor -> (viewActor whirlpoolAngle actor mapSize))
     actors
   else []
 
@@ -146,6 +189,8 @@ view model =
       Map.getPlayer model.map
     mapSize =
       model.map.size
+    whirlpoolAngle =
+      model.whirlpoolAngle
   in
     div [ class "game"
         , attribute "seed" (toString model.randomSeed)
@@ -156,7 +201,6 @@ view model =
           ]
         ]
     [ viewMapTiles model.map.tiles
-    , text (toString (Direction.getSideDirections (player.direction)))
     , div
       [ class "actors"
       , style
@@ -172,14 +216,20 @@ view model =
       ]
       [ div
         [ style [("visibility", "visible")] ]
-        (viewActors model.map.actors mapSize model.randomSeed)
+        (viewActors whirlpoolAngle model.map.actors mapSize model.randomSeed)
       ]
    ]
+
+spinRate = (200 * Time.millisecond)
+
+subscriptions: Model -> Sub Msg
+subscriptions model =
+  Time.every spinRate RotateWhirlpool
 
 -- MAIN
 main = App.program
   { init = init
   , update = update
   , view = view
-  , subscriptions = (\_ -> Sub.none)
+  , subscriptions = subscriptions
   }

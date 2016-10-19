@@ -4,6 +4,7 @@ module Map exposing
   , movePlayer
   , getPlayer
   , fireCannons
+  , rotateWhirlpools
   )
 
 import Random
@@ -183,3 +184,17 @@ fireCannons actor map =
       Direction.getSideDirections actor.direction
   in
     map
+
+rotateWhirlpools: Map -> Map
+rotateWhirlpools map =
+  let
+    whirlpools =
+      List.filter (Actor.isWhirlpool) map.actors
+    otherActors =
+      List.filter (\actor -> not (Actor.isWhirlpool actor)) map.actors
+    rotatedWhirlpools =
+      List.map (Actor.rotateClockwise) whirlpools
+    updatedActors =
+      rotatedWhirlpools ++ otherActors
+  in
+    { map | actors = updatedActors }

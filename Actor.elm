@@ -3,7 +3,10 @@ module Actor exposing
   , Actor
   , isSubtype
   , isPlayer
+  , isWhirlpool
+  , onWhirlpool
   , move
+  , rotateClockwise
   )
 
 import Direction exposing (..)
@@ -31,9 +34,31 @@ isSubtype subtype actor =
 isPlayer: Actor -> Bool
 isPlayer = isSubtype PLAYER
 
+isWhirlpool: Actor -> Bool
+isWhirlpool = isSubtype WHIRLPOOL
+
 move: Direction -> Actor -> Actor
 move dir actor =
   { actor
     | location = Location.move dir actor.location
     , direction = dir
   }
+
+rotateClockwise: Actor -> Actor
+rotateClockwise actor =
+  let
+    newDirection =
+      Direction.rotateClockwise actor.direction
+  in
+    { actor | direction = newDirection }
+
+onWhirlpool: Actor -> Int -> Bool
+onWhirlpool actor mapSize =
+  let
+    (x, y) =
+      (actor.location.x, actor.location.y)
+  in
+    if x == 0 || x == (mapSize - 1) then
+      (y == 0 || y == (mapSize - 1))
+    else
+      False

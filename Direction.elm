@@ -3,6 +3,7 @@ module Direction exposing
   , getIndex
   , getTransformRotation
   , getSideDirections
+  , rotateClockwise
   )
 
 import Debug
@@ -70,3 +71,13 @@ getSideDirections dir =
     ( Maybe.withDefault NORTH (List.Extra.getAt leftSideIndex directionList)
     , Maybe.withDefault NORTH (List.Extra.getAt rightSideIndex directionList)
     )
+
+rotateClockwise: Direction -> Direction
+rotateClockwise dir =
+  let
+    index =
+      Maybe.withDefault 0 (getIndex dir)
+    newDirection =
+      Maybe.withDefault NORTH (List.Extra.getAt ( (index + 1) % (List.length directionList) ) directionList)
+  in
+    newDirection
