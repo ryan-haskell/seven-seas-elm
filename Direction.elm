@@ -1,4 +1,12 @@
-module Direction exposing(Direction(..), getIndex, getTransformRotation)
+module Direction exposing
+  ( Direction(..)
+  , getIndex
+  , getTransformRotation
+  , getSideDirections
+  )
+
+import Debug
+import Maybe
 
 import List.Extra
 
@@ -13,23 +21,20 @@ type Direction
   | WEST
   | NORTHWEST
 
+directionList =
+  [ NORTH
+  , NORTHEAST
+  , EAST
+  , SOUTHEAST
+  , SOUTH
+  , SOUTHWEST
+  , WEST
+  , NORTHWEST
+  ]
 
 getIndex: Direction -> Maybe Int
 getIndex dir =
-  let
-    directionList =
-      [ NORTH
-      , NORTHEAST
-      , EAST
-      , SOUTHEAST
-      , SOUTH
-      , SOUTHWEST
-      , WEST
-      , NORTHWEST
-      ]
-  in
-    List.Extra.elemIndex dir directionList
-
+  List.Extra.elemIndex dir directionList
 
 getTransformRotation: Direction -> String
 getTransformRotation dir =
@@ -43,6 +48,25 @@ getTransformRotation dir =
         Just index ->
           index*45
         Nothing ->
+          --Debug.log "Direction missing from list: " dir
           0
   in
     prefix ++ (toString angle) ++ suffix
+
+getSideDirections: Direction -> (Direction, Direction)
+getSideDirections dir =
+  let
+    index =
+      case getIndex dir of
+        Just num ->
+          num
+        Nothing ->
+          0
+    numDirections =
+      List.length directionList
+    (leftSideIndex, rightSideIndex) =
+      ( (index + 2) % numDirections, (index + 6) % numDirections )
+  in
+    ( Maybe.withDefault NORTH (List.Extra.getAt leftSideIndex directionList)
+    , Maybe.withDefault NORTH (List.Extra.getAt rightSideIndex directionList)
+    )

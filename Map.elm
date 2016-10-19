@@ -1,4 +1,10 @@
-module Map exposing (Map, initializeMap, movePlayer, getPlayer)
+module Map exposing
+  ( Map
+  , initializeMap
+  , movePlayer
+  , getPlayer
+  , fireCannons
+  )
 
 import Random
 import Debug
@@ -16,6 +22,8 @@ type alias Map =
   , tiles: List (List Location)
   }
 
+
+-- Map initialization
 
 initializeMap: Int -> Int -> Int -> Map
 initializeMap size level seed =
@@ -51,51 +59,6 @@ initializeTiles mapSize =
         [0..mapSize-1]
   in
     tiles
-
-
-getPlayer: Map -> Actor
-getPlayer map =
-  let
-
-    actors =
-      map.actors
-
-    players =
-      List.filter
-        Actor.isPlayer
-        actors
-
-    player =
-      case List.head players of
-        Nothing ->
-          Debug.crash ("No player found")
-        Just actor ->
-          actor
-
-  in
-    player
-
-
-movePlayer: Int -> Int -> Map -> Map
-movePlayer x y map =
-  let
-    player =
-      getPlayer map
-    nonPlayerActors =
-      List.filter (\actor -> not(Actor.isPlayer actor)) map.actors
-    isAdjacentTile =
-      Location.isAdjacentTile (player.location) (Location x y)
-    dir =
-      Location.getDirection (player.location) (Location x y)
-    updatedPlayer =
-      Actor.move dir player
-    updatedActors =
-      nonPlayerActors ++ [updatedPlayer]
-  in
-    if isAdjacentTile then
-      { map | actors = updatedActors }
-    else map
-
 
 generateIslands: Int -> Int -> List Actor
 generateIslands size seedNum =
@@ -147,3 +110,58 @@ generateIsland size seed =
       Random.step (Random.int 1 (size-2)) seed1
   in
     Actor ISLAND (Location x y) NORTH
+
+-- Getting Data
+getPlayer: Map -> Actor
+getPlayer map =
+  let
+
+    actors =
+      map.actors
+
+    players =
+      List.filter
+        Actor.isPlayer
+        actors
+
+    player =
+      case List.head players of
+        Nothing ->
+          Debug.crash ("No player found")
+        Just actor ->
+          actor
+
+  in
+    player
+
+
+-- Map updating
+
+moveActor: Actor -> Int -> Int -> Map -> Map
+moveActor movingActor x y map =
+  let
+    otherActors =
+      List.filter (\otherActor -> movingActor /= otherActor) map.actors
+    isAdjacentTile =
+      Location.isAdjacentTile (movingActor.location) (Location x y)
+    dir =
+      Location.getDirection (movingActor.location) (Location x y)
+    updatedMovingActor =
+      Actor.move dir movingActor
+    updatedActors =
+      otherActors ++ [updatedMovingActor]
+  in
+    if isAdjacentTile then
+      { map | actors = updatedActors }
+    else map
+
+movePlayer: Int -> Int -> Map -> Map
+movePlayer x y map = moveActor (getPlayer map) x y map
+
+fireCannons: Actor -> Map -> Map
+fireCannons actor map =
+  let
+    cannonDirections =
+      Direction.getSideDirections actor.direction
+  in
+    map

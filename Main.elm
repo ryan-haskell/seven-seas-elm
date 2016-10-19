@@ -32,6 +32,7 @@ init =
 -- UPDATE
 type Msg
   = TileClicked Int Int
+  | ActorClicked Actor
   | SetRandomSeed Int
   | None
 
@@ -40,6 +41,12 @@ update msg model =
   case msg of
     TileClicked x y ->
       ({ model | map = Map.movePlayer x y model.map }, Cmd.none)
+    ActorClicked actor ->
+      case actor.subtype of
+        PLAYER ->
+          ({ model | map = (Map.fireCannons actor model.map) }, Cmd.none)
+        _ ->
+          (model, Cmd.none)
     SetRandomSeed seed ->
       ({ model
         | map = Map.initializeMap 7 1 seed
@@ -116,6 +123,7 @@ viewActor actor mapSize =
       , ("transition", "top .5s, left .5s")
       , ("transform", (Direction.getTransformRotation actor.direction))
       ]
+    , onClick (ActorClicked actor)
     ]
     []
   )
@@ -145,6 +153,7 @@ view model =
           ]
         ]
     [ viewMapTiles model.map.tiles
+    , text (toString (Direction.getSideDirections (player.direction)))
     , div
       [ class "actors"
       , style

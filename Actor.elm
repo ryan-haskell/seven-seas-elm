@@ -16,7 +16,7 @@ type ActorType
   | ISLAND
   | WHIRLPOOL
   | WRECKAGE
-
+  | CANNONBALL
 
 type alias Actor =
   { subtype: ActorType
@@ -24,14 +24,12 @@ type alias Actor =
   , direction: Direction
   }
 
-
 isSubtype: ActorType -> Actor -> Bool
 isSubtype subtype actor =
   actor.subtype == subtype
 
 isPlayer: Actor -> Bool
 isPlayer = isSubtype PLAYER
-
 
 move: Direction -> Actor -> Actor
 move dir actor =
