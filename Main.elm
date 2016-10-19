@@ -45,6 +45,8 @@ update msg model =
       case actor.subtype of
         PLAYER ->
           ({ model | map = (Map.fireCannons actor model.map) }, Cmd.none)
+        WHIRLPOOL ->
+          ({ model | map = Map.movePlayer actor.location.x actor.location.y model.map }, Cmd.none)
         _ ->
           (model, Cmd.none)
     SetRandomSeed seed ->
@@ -150,6 +152,7 @@ view model =
         , style
           [ ("height", "100%")
           , ("overflow", "hidden")
+          , ("cursor", "pointer")
           ]
         ]
     [ viewMapTiles model.map.tiles

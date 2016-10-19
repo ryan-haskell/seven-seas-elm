@@ -28,28 +28,30 @@ type alias Map =
 initializeMap: Int -> Int -> Int -> Map
 initializeMap size level seed =
   let
+    whirlpools =
+      initWhirlpools size
     islands =
-      generateIslands size seed
+      initIslands size seed
     pirates =
       []
       --generatePirates size level
     player =
-      initializePlayer size
+      initPlayer size
     actors =
-      islands ++ pirates ++ [player]
+      whirlpools ++ islands ++ pirates ++ [player]
     tiles =
-      initializeTiles size
+      initTiles size
   in
     Map size level actors tiles
 
 
-initializePlayer: Int -> Actor
-initializePlayer mapSize =
+initPlayer: Int -> Actor
+initPlayer mapSize =
   Actor PLAYER (Location (mapSize // 2) (mapSize // 2)) SOUTH
 
 
-initializeTiles: Int -> List (List Location)
-initializeTiles mapSize =
+initTiles: Int -> List (List Location)
+initTiles mapSize =
   let
     tiles =
       List.map
@@ -60,8 +62,24 @@ initializeTiles mapSize =
   in
     tiles
 
-generateIslands: Int -> Int -> List Actor
-generateIslands size seedNum =
+initWhirlpools: Int -> List Actor
+initWhirlpools size =
+  let
+    maxIndex = size - 1
+
+    listListActor =
+      List.map
+        (\row ->
+          List.map
+            (\col -> Actor WHIRLPOOL (Location (row*maxIndex) (col*maxIndex)) NORTH)
+            [0..1]
+        )
+        [0..1]
+  in
+    List.concat listListActor
+
+initIslands: Int -> Int -> List Actor
+initIslands size seedNum =
   let
     seed = Random.initialSeed seedNum
 
@@ -79,7 +97,7 @@ generateIslands size seedNum =
       makeSeeds seed1 numIslands
 
     islands =
-      List.map (generateIsland size) seeds
+      List.map (initIsland size) seeds
 
   in
     List.filter
@@ -101,8 +119,8 @@ makeSeedsHelper seed maxIndex index seeds =
     else
       makeSeedsHelper newSeed maxIndex (index+1) (List.append seeds [newSeed])
 
-generateIsland: Int -> Random.Seed -> Actor
-generateIsland size seed =
+initIsland: Int -> Random.Seed -> Actor
+initIsland size seed =
   let
     (x, seed1) =
       Random.step (Random.int 1 (size-2)) seed
