@@ -43,7 +43,19 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     TileClicked x y ->
-      ({ model | map = Map.movePlayer x y model.map }, Cmd.none)
+      let
+        playerMovedMap =
+          Map.movePlayer x y model.map
+        playerUpdated =
+          (Map.getPlayer model.map /= Map.getPlayer playerMovedMap)
+        updatedMap =
+          if playerUpdated then
+            Map.movePirates x y playerMovedMap
+          else
+            model.map
+      in
+        ({ model | map = updatedMap }, Cmd.none)
+
     ActorClicked actor ->
       case actor.subtype of
         PLAYER ->
@@ -52,12 +64,15 @@ update msg model =
           ({ model | map = Map.movePlayer actor.location.x actor.location.y model.map }, Cmd.none)
         _ ->
           (model, Cmd.none)
+
     SetRandomSeed seed ->
       ({ model
         | map = Map.initializeMap 7 1 seed
         , randomSeed = seed }, Cmd.none)
+
     RotateWhirlpool time ->
       ({model | whirlpoolAngle = model.whirlpoolAngle + 45}, Cmd.none)
+
     None ->
       (model, Cmd.none)
 
