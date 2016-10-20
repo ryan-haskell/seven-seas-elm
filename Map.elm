@@ -14,6 +14,7 @@ import Direction exposing (Direction(..))
 import Location exposing (Location)
 import Actor
 import Actor exposing (Actor, ActorType(..))
+import RandomHelper
 
 
 type alias Map =
@@ -27,23 +28,26 @@ type alias Map =
 -- Map initialization
 
 initializeMap: Int -> Int -> Int -> Map
-initializeMap size level seed =
+initializeMap size level seedNum =
   let
+    seed =
+      Random.initialSeed seedNum
     whirlpools =
       initWhirlpools size
     islands =
       initIslands size seed
-    pirates =
-      []
-      --generatePirates size level
     player =
       initPlayer size
     actors =
+      whirlpools ++ islands ++ [player]
+    pirates =
+      initPirates size level seed actors
+    newActors =
       whirlpools ++ islands ++ pirates ++ [player]
     tiles =
       initTiles size
   in
-    Map size level actors tiles
+    Map size level newActors tiles
 
 
 initPlayer: Int -> Actor
@@ -79,11 +83,9 @@ initWhirlpools size =
   in
     List.concat listListActor
 
-initIslands: Int -> Int -> List Actor
-initIslands size seedNum =
+initIslands: Int -> Random.Seed -> List Actor
+initIslands size seed =
   let
-    seed = Random.initialSeed seedNum
-
     minIslands =
       (size * size * 5 // 100)
 
@@ -91,11 +93,11 @@ initIslands size seedNum =
       (size * size * 15 // 100)
 
     (numIslands, seed1) =
-      Random.step (Random.int minIslands maxIslands) (Random.initialSeed seedNum)
+      Random.step (Random.int minIslands maxIslands) seed
 
     -- Generate a random seed for each island
     seeds =
-      makeSeeds seed1 numIslands
+      RandomHelper.makeSeeds seed1 numIslands
 
     islands =
       List.map (initIsland size) seeds
@@ -104,21 +106,6 @@ initIslands size seedNum =
     List.filter
       (\actor -> not (actor.location.x == size // 2 && actor.location.y == size // 2))
       islands
-
-makeSeeds: Random.Seed -> Int -> List Random.Seed
-makeSeeds seed numSeeds =
-  makeSeedsHelper seed numSeeds 0 []
-
-makeSeedsHelper: Random.Seed -> Int -> Int -> List Random.Seed -> List Random.Seed
-makeSeedsHelper seed maxIndex index seeds =
-  let
-    (num, newSeed) =
-      Random.step (Random.int Random.minInt Random.maxInt) seed
-  in
-    if index == maxIndex then
-      seeds
-    else
-      makeSeedsHelper newSeed maxIndex (index+1) (List.append seeds [newSeed])
 
 initIsland: Int -> Random.Seed -> Actor
 initIsland size seed =
@@ -129,6 +116,36 @@ initIsland size seed =
       Random.step (Random.int 1 (size-2)) seed1
   in
     Actor ISLAND (Location x y) NORTH
+
+initPirates: Int -> Int -> Random.Seed -> List Actor -> List Actor
+initPirates size level seed actors =
+  let
+    numPirates =
+      2 -- TODO: Use level and size to determine
+
+    seeds =
+      RandomHelper.makeSeeds seed numPirates
+
+    pirates =
+      List.map (\seed -> initPirate size level seed actors) seeds
+  in
+    pirates
+
+initPirate: Int -> Int -> Random.Seed -> List Actor -> Actor
+initPirate size level seed actors =
+  let
+    (x, seed1) =
+      Random.step (Random.int 0 (size-1)) seed
+    (y, seed2) =
+      Random.step (Random.int 0 (size-1)) seed1
+    loc =
+      Location x y
+  in
+    if hasActor loc actors then
+      initPirate size level seed2 actors
+    else
+      Actor PIRATE loc SOUTH
+
 
 -- Getting Data
 getPlayer: Map -> Actor
@@ -153,6 +170,13 @@ getPlayer map =
   in
     player
 
+hasActor: Location -> List Actor -> Bool
+hasActor loc actors =
+  let
+    actorsAtLoc =
+      List.filter (\actor -> actor.location == loc) actors
+  in
+    not (List.isEmpty actorsAtLoc)
 
 -- Map updating
 
