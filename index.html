@@ -1,18 +1,17 @@
 <!DOCTYPE HTML>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Seven Seas | Elm</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">    <style>html,head,body { padding:0; margin:0; }
+<html><head>
+  <meta charset="UTF-8">
+  <title>Seven Seas | Elm</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">    <style>html,head,body { padding:0; margin:0; }
 body { font-family: calibri, helvetica, arial, sans-serif; overflow-x: hidden;}
 div {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
 }</style><script type="text/javascript">
 (function() {
 'use strict';
@@ -10073,8 +10072,48 @@ var _user$project$Actor$WHIRLPOOL = {ctor: 'WHIRLPOOL'};
 var _user$project$Actor$isWhirlpool = _user$project$Actor$isSubtype(_user$project$Actor$WHIRLPOOL);
 var _user$project$Actor$ISLAND = {ctor: 'ISLAND'};
 var _user$project$Actor$PIRATE = {ctor: 'PIRATE'};
+var _user$project$Actor$isPirate = _user$project$Actor$isSubtype(_user$project$Actor$PIRATE);
 var _user$project$Actor$PLAYER = {ctor: 'PLAYER'};
 var _user$project$Actor$isPlayer = _user$project$Actor$isSubtype(_user$project$Actor$PLAYER);
+var _user$project$RandomHelper$makeSeedsHelper = F4(
+	function (seed, maxIndex, index, seeds) {
+		makeSeedsHelper:
+		while (true) {
+			var _p0 = A2(
+				_elm_lang$core$Random$step,
+				A2(_elm_lang$core$Random$int, _elm_lang$core$Random$minInt, _elm_lang$core$Random$maxInt),
+				seed);
+			var num = _p0._0;
+			var newSeed = _p0._1;
+			if (_elm_lang$core$Native_Utils.eq(index, maxIndex)) {
+				return seeds;
+			} else {
+				var _v0 = newSeed,
+					_v1 = maxIndex,
+					_v2 = index + 1,
+					_v3 = A2(
+					_elm_lang$core$List$append,
+					seeds,
+					_elm_lang$core$Native_List.fromArray(
+						[newSeed]));
+				seed = _v0;
+				maxIndex = _v1;
+				index = _v2;
+				seeds = _v3;
+				continue makeSeedsHelper;
+			}
+		}
+	});
+var _user$project$RandomHelper$makeSeeds = F2(
+	function (seed, numSeeds) {
+		return A4(
+			_user$project$RandomHelper$makeSeedsHelper,
+			seed,
+			numSeeds,
+			0,
+			_elm_lang$core$Native_List.fromArray(
+				[]));
+	});
 var _user$project$Map$rotateWhirlpools = function (map) {
 	var otherActors = A2(
 		_elm_lang$core$List$filter,
@@ -10094,6 +10133,36 @@ var _user$project$Map$fireCannons = F2(
 	function (actor, map) {
 		var cannonDirections = _user$project$Direction$getSideDirections(actor.direction);
 		return map;
+	});
+var _user$project$Map$movePirate = F2(
+	function (playerLocation, pirate) {
+		var newDirection = A2(_user$project$Location$getDirection, pirate.location, playerLocation);
+		var newLocation = A2(_user$project$Location$move, newDirection, pirate.location);
+		return _elm_lang$core$Native_Utils.update(
+			pirate,
+			{location: newLocation, direction: newDirection});
+	});
+var _user$project$Map$movePirates = F3(
+	function (playerX, playerY, map) {
+		var _p0 = A2(_elm_lang$core$List$partition, _user$project$Actor$isPlayer, map.actors);
+		var players = _p0._0;
+		var nonPlayerActors = _p0._1;
+		var _p1 = A2(_elm_lang$core$List$partition, _user$project$Actor$isPirate, nonPlayerActors);
+		var pirates = _p1._0;
+		var nonShipActors = _p1._1;
+		var playerLocation = A2(_user$project$Location$Location, playerX, playerY);
+		var movedPirates = A2(
+			_elm_lang$core$List$map,
+			_user$project$Map$movePirate(playerLocation),
+			pirates);
+		return _elm_lang$core$Native_Utils.update(
+			map,
+			{
+				actors: A2(
+					_elm_lang$core$Basics_ops['++'],
+					nonShipActors,
+					A2(_elm_lang$core$Basics_ops['++'], movedPirates, players))
+			});
 	});
 var _user$project$Map$moveActor = F4(
 	function (movingActor, x, y, map) {
@@ -10121,21 +10190,32 @@ var _user$project$Map$moveActor = F4(
 			map,
 			{actors: updatedActors}) : map;
 	});
+var _user$project$Map$hasActor = F2(
+	function (loc, actors) {
+		var actorsAtLoc = A2(
+			_elm_lang$core$List$filter,
+			function (actor) {
+				return _elm_lang$core$Native_Utils.eq(actor.location, loc);
+			},
+			actors);
+		return _elm_lang$core$Basics$not(
+			_elm_lang$core$List$isEmpty(actorsAtLoc));
+	});
 var _user$project$Map$getPlayer = function (map) {
 	var actors = map.actors;
 	var players = A2(_elm_lang$core$List$filter, _user$project$Actor$isPlayer, actors);
 	var player = function () {
-		var _p0 = _elm_lang$core$List$head(players);
-		if (_p0.ctor === 'Nothing') {
+		var _p2 = _elm_lang$core$List$head(players);
+		if (_p2.ctor === 'Nothing') {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Map',
 				{
-					start: {line: 147, column: 7},
-					end: {line: 151, column: 16}
+					start: {line: 165, column: 7},
+					end: {line: 169, column: 16}
 				},
-				_p0)('No player found');
+				_p2)('No player found');
 		} else {
-			return _p0._0;
+			return _p2._0;
 		}
 	}();
 	return player;
@@ -10149,81 +10229,85 @@ var _user$project$Map$movePlayer = F3(
 			y,
 			map);
 	});
+var _user$project$Map$initPirate = F4(
+	function (size, level, seed, actors) {
+		initPirate:
+		while (true) {
+			var _p4 = A2(
+				_elm_lang$core$Random$step,
+				A2(_elm_lang$core$Random$int, 0, size - 1),
+				seed);
+			var x = _p4._0;
+			var seed1 = _p4._1;
+			var _p5 = A2(
+				_elm_lang$core$Random$step,
+				A2(_elm_lang$core$Random$int, 0, size - 1),
+				seed1);
+			var y = _p5._0;
+			var seed2 = _p5._1;
+			var loc = A2(_user$project$Location$Location, x, y);
+			if (A2(_user$project$Map$hasActor, loc, actors)) {
+				var _v1 = size,
+					_v2 = level,
+					_v3 = seed2,
+					_v4 = actors;
+				size = _v1;
+				level = _v2;
+				seed = _v3;
+				actors = _v4;
+				continue initPirate;
+			} else {
+				return A3(_user$project$Actor$Actor, _user$project$Actor$PIRATE, loc, _user$project$Direction$SOUTH);
+			}
+		}
+	});
+var _user$project$Map$initPirates = F4(
+	function (size, level, seed, actors) {
+		var numPirates = 2;
+		var seeds = A2(_user$project$RandomHelper$makeSeeds, seed, numPirates);
+		var pirates = A2(
+			_elm_lang$core$List$map,
+			function (seed) {
+				return A4(_user$project$Map$initPirate, size, level, seed, actors);
+			},
+			seeds);
+		return pirates;
+	});
 var _user$project$Map$initIsland = F2(
 	function (size, seed) {
-		var _p2 = A2(
+		var _p6 = A2(
 			_elm_lang$core$Random$step,
 			A2(_elm_lang$core$Random$int, 1, size - 2),
 			seed);
-		var x = _p2._0;
-		var seed1 = _p2._1;
-		var _p3 = A2(
+		var x = _p6._0;
+		var seed1 = _p6._1;
+		var _p7 = A2(
 			_elm_lang$core$Random$step,
 			A2(_elm_lang$core$Random$int, 1, size - 2),
 			seed1);
-		var y = _p3._0;
-		var seed2 = _p3._1;
+		var y = _p7._0;
+		var seed2 = _p7._1;
 		return A3(
 			_user$project$Actor$Actor,
 			_user$project$Actor$ISLAND,
 			A2(_user$project$Location$Location, x, y),
 			_user$project$Direction$NORTH);
 	});
-var _user$project$Map$makeSeedsHelper = F4(
-	function (seed, maxIndex, index, seeds) {
-		makeSeedsHelper:
-		while (true) {
-			var _p4 = A2(
-				_elm_lang$core$Random$step,
-				A2(_elm_lang$core$Random$int, _elm_lang$core$Random$minInt, _elm_lang$core$Random$maxInt),
-				seed);
-			var num = _p4._0;
-			var newSeed = _p4._1;
-			if (_elm_lang$core$Native_Utils.eq(index, maxIndex)) {
-				return seeds;
-			} else {
-				var _v1 = newSeed,
-					_v2 = maxIndex,
-					_v3 = index + 1,
-					_v4 = A2(
-					_elm_lang$core$List$append,
-					seeds,
-					_elm_lang$core$Native_List.fromArray(
-						[newSeed]));
-				seed = _v1;
-				maxIndex = _v2;
-				index = _v3;
-				seeds = _v4;
-				continue makeSeedsHelper;
-			}
-		}
-	});
-var _user$project$Map$makeSeeds = F2(
-	function (seed, numSeeds) {
-		return A4(
-			_user$project$Map$makeSeedsHelper,
-			seed,
-			numSeeds,
-			0,
-			_elm_lang$core$Native_List.fromArray(
-				[]));
-	});
 var _user$project$Map$initIslands = F2(
-	function (size, seedNum) {
+	function (size, seed) {
 		var maxIslands = (((size * size) * 15) / 100) | 0;
 		var minIslands = (((size * size) * 5) / 100) | 0;
-		var _p5 = A2(
+		var _p8 = A2(
 			_elm_lang$core$Random$step,
 			A2(_elm_lang$core$Random$int, minIslands, maxIslands),
-			_elm_lang$core$Random$initialSeed(seedNum));
-		var numIslands = _p5._0;
-		var seed1 = _p5._1;
-		var seeds = A2(_user$project$Map$makeSeeds, seed1, numIslands);
+			seed);
+		var numIslands = _p8._0;
+		var seed1 = _p8._1;
+		var seeds = A2(_user$project$RandomHelper$makeSeeds, seed1, numIslands);
 		var islands = A2(
 			_elm_lang$core$List$map,
 			_user$project$Map$initIsland(size),
 			seeds);
-		var seed = _elm_lang$core$Random$initialSeed(seedNum);
 		return A2(
 			_elm_lang$core$List$filter,
 			function (actor) {
@@ -10277,14 +10361,22 @@ var _user$project$Map$Map = F4(
 		return {size: a, level: b, actors: c, tiles: d};
 	});
 var _user$project$Map$initializeMap = F3(
-	function (size, level, seed) {
+	function (size, level, seedNum) {
 		var tiles = _user$project$Map$initTiles(size);
 		var player = _user$project$Map$initPlayer(size);
-		var pirates = _elm_lang$core$Native_List.fromArray(
-			[]);
-		var islands = A2(_user$project$Map$initIslands, size, seed);
 		var whirlpools = _user$project$Map$initWhirlpools(size);
+		var seed = _elm_lang$core$Random$initialSeed(seedNum);
+		var islands = A2(_user$project$Map$initIslands, size, seed);
 		var actors = A2(
+			_elm_lang$core$Basics_ops['++'],
+			whirlpools,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				islands,
+				_elm_lang$core$Native_List.fromArray(
+					[player])));
+		var pirates = A4(_user$project$Map$initPirates, size, level, seed, actors);
+		var newActors = A2(
 			_elm_lang$core$Basics_ops['++'],
 			whirlpools,
 			A2(
@@ -10295,7 +10387,7 @@ var _user$project$Map$initializeMap = F3(
 					pirates,
 					_elm_lang$core$Native_List.fromArray(
 						[player]))));
-		return A4(_user$project$Map$Map, size, level, actors, tiles);
+		return A4(_user$project$Map$Map, size, level, newActors, tiles);
 	});
 var _user$project$Main$spinRate = 200 * _elm_lang$core$Time$millisecond;
 var _user$project$Main$getTileSize = function (size) {
@@ -10328,26 +10420,31 @@ var _user$project$Main$update = F2(
 		var _p0 = msg;
 		switch (_p0.ctor) {
 			case 'TileClicked':
+				var _p2 = _p0._1;
+				var _p1 = _p0._0;
+				var playerMovedMap = A3(_user$project$Map$movePlayer, _p1, _p2, model.map);
+				var playerUpdated = !_elm_lang$core$Native_Utils.eq(
+					_user$project$Map$getPlayer(model.map),
+					_user$project$Map$getPlayer(playerMovedMap));
+				var updatedMap = playerUpdated ? A3(_user$project$Map$movePirates, _p1, _p2, playerMovedMap) : model.map;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{
-							map: A3(_user$project$Map$movePlayer, _p0._0, _p0._1, model.map)
-						}),
+						{map: updatedMap}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'ActorClicked':
-				var _p2 = _p0._0;
-				var _p1 = _p2.subtype;
-				switch (_p1.ctor) {
+				var _p4 = _p0._0;
+				var _p3 = _p4.subtype;
+				switch (_p3.ctor) {
 					case 'PLAYER':
 						return {
 							ctor: '_Tuple2',
 							_0: _elm_lang$core$Native_Utils.update(
 								model,
 								{
-									map: A2(_user$project$Map$fireCannons, _p2, model.map)
+									map: A2(_user$project$Map$fireCannons, _p4, model.map)
 								}),
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
@@ -10357,7 +10454,7 @@ var _user$project$Main$update = F2(
 							_0: _elm_lang$core$Native_Utils.update(
 								model,
 								{
-									map: A3(_user$project$Map$movePlayer, _p2.location.x, _p2.location.y, model.map)
+									map: A3(_user$project$Map$movePlayer, _p4.location.x, _p4.location.y, model.map)
 								}),
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
@@ -10365,14 +10462,14 @@ var _user$project$Main$update = F2(
 						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 				}
 			case 'SetRandomSeed':
-				var _p3 = _p0._0;
+				var _p5 = _p0._0;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							map: A3(_user$project$Map$initializeMap, 7, 1, _p3),
-							randomSeed: _p3
+							map: A3(_user$project$Map$initializeMap, 7, 1, _p5),
+							randomSeed: _p5
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -10427,12 +10524,12 @@ var _user$project$Main$viewActor = F3(
 				_elm_lang$core$Basics_ops['++'],
 				_elm_lang$core$Basics$toString(whirlpoolAngle),
 				'deg)'));
-		var _p4 = {ctor: '_Tuple2', _0: 'transform .5s', _1: 'top .5s, left .5s'};
-		var whirlpoolTransition = _p4._0;
-		var defaultTransition = _p4._1;
+		var _p6 = {ctor: '_Tuple2', _0: 'transform .5s', _1: 'top .5s, left .5s'};
+		var whirlpoolTransition = _p6._0;
+		var defaultTransition = _p6._1;
 		var transition = function () {
-			var _p5 = actor.subtype;
-			if (_p5.ctor === 'WHIRLPOOL') {
+			var _p7 = actor.subtype;
+			if (_p7.ctor === 'WHIRLPOOL') {
 				return whirlpoolTransition;
 			} else {
 				return defaultTransition;
@@ -10440,8 +10537,8 @@ var _user$project$Main$viewActor = F3(
 		}();
 		var onWhirlpool = A2(_user$project$Actor$onWhirlpool, actor, mapSize);
 		var transform = function () {
-			var _p6 = actor.subtype;
-			switch (_p6.ctor) {
+			var _p8 = actor.subtype;
+			switch (_p8.ctor) {
 				case 'WHIRLPOOL':
 					return whirlpoolTransform;
 				case 'PLAYER':
