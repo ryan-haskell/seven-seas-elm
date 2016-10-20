@@ -5,6 +5,7 @@ module Map exposing
   , getPlayer
   , fireCannons
   , rotateWhirlpools
+  , movePirates
   )
 
 import Random
@@ -200,6 +201,34 @@ moveActor movingActor x y map =
 
 movePlayer: Int -> Int -> Map -> Map
 movePlayer x y map = moveActor (getPlayer map) x y map
+
+movePirates: Int -> Int -> Map -> Map
+movePirates playerX playerY map =
+  let
+    playerLocation =
+      Location playerX playerY
+    (players, nonPlayerActors) =
+      List.partition Actor.isPlayer map.actors
+    (pirates, nonShipActors) =
+      List.partition Actor.isPirate nonPlayerActors
+    movedPirates =
+      List.map (movePirate playerLocation) pirates
+  in
+    { map | actors = (nonShipActors ++ movedPirates ++ players) }
+
+movePirate: Location -> Actor -> Actor
+movePirate playerLocation pirate =
+  let
+    newDirection = -- Reverse param order if they run away
+      Location.getDirection pirate.location playerLocation
+    newLocation =
+      Location.move newDirection pirate.location
+  in
+    { pirate
+      | location = newLocation
+      , direction = newDirection
+    }
+
 
 fireCannons: Actor -> Map -> Map
 fireCannons actor map =

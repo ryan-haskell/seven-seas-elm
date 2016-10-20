@@ -4,6 +4,7 @@ module Actor exposing
   , isSubtype
   , isPlayer
   , isWhirlpool
+  , isPirate
   , onWhirlpool
   , move
   , rotateClockwise
@@ -36,6 +37,9 @@ isPlayer = isSubtype PLAYER
 
 isWhirlpool: Actor -> Bool
 isWhirlpool = isSubtype WHIRLPOOL
+
+isPirate: Actor -> Bool
+isPirate = isSubtype PIRATE
 
 move: Direction -> Actor -> Actor
 move dir actor =
