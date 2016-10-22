@@ -5246,6 +5246,630 @@ var _elm_community$list_extra$List_Extra$init = function () {
 }();
 var _elm_community$list_extra$List_Extra$last = _elm_community$list_extra$List_Extra$foldl1(
 	_elm_lang$core$Basics$flip(_elm_lang$core$Basics$always));
+var _elm_lang$animation_frame$Native_AnimationFrame = function()
+{
+
+var hasStartTime =
+	window.performance &&
+	window.performance.timing &&
+	window.performance.timing.navigationStart;
+
+var navStart = hasStartTime
+	? window.performance.timing.navigationStart
+	: Date.now();
+
+var rAF = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+{
+	var id = requestAnimationFrame(function(time) {
+		var timeNow = time
+			? (time > navStart ? time : time + navStart)
+			: Date.now();
+
+		callback(_elm_lang$core$Native_Scheduler.succeed(timeNow));
+	});
+
+	return function() {
+		cancelAnimationFrame(id);
+	};
+});
+
+return {
+	rAF: rAF
+};
+
+}();
+var _elm_lang$core$Task$onError = _elm_lang$core$Native_Scheduler.onError;
+var _elm_lang$core$Task$andThen = _elm_lang$core$Native_Scheduler.andThen;
+var _elm_lang$core$Task$spawnCmd = F2(
+	function (router, _p0) {
+		var _p1 = _p0;
+		return _elm_lang$core$Native_Scheduler.spawn(
+			A2(
+				_elm_lang$core$Task$andThen,
+				_p1._0,
+				_elm_lang$core$Platform$sendToApp(router)));
+	});
+var _elm_lang$core$Task$fail = _elm_lang$core$Native_Scheduler.fail;
+var _elm_lang$core$Task$mapError = F2(
+	function (f, task) {
+		return A2(
+			_elm_lang$core$Task$onError,
+			task,
+			function (err) {
+				return _elm_lang$core$Task$fail(
+					f(err));
+			});
+	});
+var _elm_lang$core$Task$succeed = _elm_lang$core$Native_Scheduler.succeed;
+var _elm_lang$core$Task$map = F2(
+	function (func, taskA) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			taskA,
+			function (a) {
+				return _elm_lang$core$Task$succeed(
+					func(a));
+			});
+	});
+var _elm_lang$core$Task$map2 = F3(
+	function (func, taskA, taskB) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			taskA,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					taskB,
+					function (b) {
+						return _elm_lang$core$Task$succeed(
+							A2(func, a, b));
+					});
+			});
+	});
+var _elm_lang$core$Task$map3 = F4(
+	function (func, taskA, taskB, taskC) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			taskA,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					taskB,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							taskC,
+							function (c) {
+								return _elm_lang$core$Task$succeed(
+									A3(func, a, b, c));
+							});
+					});
+			});
+	});
+var _elm_lang$core$Task$map4 = F5(
+	function (func, taskA, taskB, taskC, taskD) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			taskA,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					taskB,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							taskC,
+							function (c) {
+								return A2(
+									_elm_lang$core$Task$andThen,
+									taskD,
+									function (d) {
+										return _elm_lang$core$Task$succeed(
+											A4(func, a, b, c, d));
+									});
+							});
+					});
+			});
+	});
+var _elm_lang$core$Task$map5 = F6(
+	function (func, taskA, taskB, taskC, taskD, taskE) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			taskA,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					taskB,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							taskC,
+							function (c) {
+								return A2(
+									_elm_lang$core$Task$andThen,
+									taskD,
+									function (d) {
+										return A2(
+											_elm_lang$core$Task$andThen,
+											taskE,
+											function (e) {
+												return _elm_lang$core$Task$succeed(
+													A5(func, a, b, c, d, e));
+											});
+									});
+							});
+					});
+			});
+	});
+var _elm_lang$core$Task$andMap = F2(
+	function (taskFunc, taskValue) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			taskFunc,
+			function (func) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					taskValue,
+					function (value) {
+						return _elm_lang$core$Task$succeed(
+							func(value));
+					});
+			});
+	});
+var _elm_lang$core$Task$sequence = function (tasks) {
+	var _p2 = tasks;
+	if (_p2.ctor === '[]') {
+		return _elm_lang$core$Task$succeed(
+			_elm_lang$core$Native_List.fromArray(
+				[]));
+	} else {
+		return A3(
+			_elm_lang$core$Task$map2,
+			F2(
+				function (x, y) {
+					return A2(_elm_lang$core$List_ops['::'], x, y);
+				}),
+			_p2._0,
+			_elm_lang$core$Task$sequence(_p2._1));
+	}
+};
+var _elm_lang$core$Task$onEffects = F3(
+	function (router, commands, state) {
+		return A2(
+			_elm_lang$core$Task$map,
+			function (_p3) {
+				return {ctor: '_Tuple0'};
+			},
+			_elm_lang$core$Task$sequence(
+				A2(
+					_elm_lang$core$List$map,
+					_elm_lang$core$Task$spawnCmd(router),
+					commands)));
+	});
+var _elm_lang$core$Task$toMaybe = function (task) {
+	return A2(
+		_elm_lang$core$Task$onError,
+		A2(_elm_lang$core$Task$map, _elm_lang$core$Maybe$Just, task),
+		function (_p4) {
+			return _elm_lang$core$Task$succeed(_elm_lang$core$Maybe$Nothing);
+		});
+};
+var _elm_lang$core$Task$fromMaybe = F2(
+	function ($default, maybe) {
+		var _p5 = maybe;
+		if (_p5.ctor === 'Just') {
+			return _elm_lang$core$Task$succeed(_p5._0);
+		} else {
+			return _elm_lang$core$Task$fail($default);
+		}
+	});
+var _elm_lang$core$Task$toResult = function (task) {
+	return A2(
+		_elm_lang$core$Task$onError,
+		A2(_elm_lang$core$Task$map, _elm_lang$core$Result$Ok, task),
+		function (msg) {
+			return _elm_lang$core$Task$succeed(
+				_elm_lang$core$Result$Err(msg));
+		});
+};
+var _elm_lang$core$Task$fromResult = function (result) {
+	var _p6 = result;
+	if (_p6.ctor === 'Ok') {
+		return _elm_lang$core$Task$succeed(_p6._0);
+	} else {
+		return _elm_lang$core$Task$fail(_p6._0);
+	}
+};
+var _elm_lang$core$Task$init = _elm_lang$core$Task$succeed(
+	{ctor: '_Tuple0'});
+var _elm_lang$core$Task$onSelfMsg = F3(
+	function (_p9, _p8, _p7) {
+		return _elm_lang$core$Task$succeed(
+			{ctor: '_Tuple0'});
+	});
+var _elm_lang$core$Task$command = _elm_lang$core$Native_Platform.leaf('Task');
+var _elm_lang$core$Task$T = function (a) {
+	return {ctor: 'T', _0: a};
+};
+var _elm_lang$core$Task$perform = F3(
+	function (onFail, onSuccess, task) {
+		return _elm_lang$core$Task$command(
+			_elm_lang$core$Task$T(
+				A2(
+					_elm_lang$core$Task$onError,
+					A2(_elm_lang$core$Task$map, onSuccess, task),
+					function (x) {
+						return _elm_lang$core$Task$succeed(
+							onFail(x));
+					})));
+	});
+var _elm_lang$core$Task$cmdMap = F2(
+	function (tagger, _p10) {
+		var _p11 = _p10;
+		return _elm_lang$core$Task$T(
+			A2(_elm_lang$core$Task$map, tagger, _p11._0));
+	});
+_elm_lang$core$Native_Platform.effectManagers['Task'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Task$init, onEffects: _elm_lang$core$Task$onEffects, onSelfMsg: _elm_lang$core$Task$onSelfMsg, tag: 'cmd', cmdMap: _elm_lang$core$Task$cmdMap};
+//import Native.Scheduler //
+
+var _elm_lang$core$Native_Time = function() {
+
+var now = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+{
+	callback(_elm_lang$core$Native_Scheduler.succeed(Date.now()));
+});
+
+function setInterval_(interval, task)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		var id = setInterval(function() {
+			_elm_lang$core$Native_Scheduler.rawSpawn(task);
+		}, interval);
+
+		return function() { clearInterval(id); };
+	});
+}
+
+return {
+	now: now,
+	setInterval_: F2(setInterval_)
+};
+
+}();var _elm_lang$core$Time$setInterval = _elm_lang$core$Native_Time.setInterval_;
+var _elm_lang$core$Time$spawnHelp = F3(
+	function (router, intervals, processes) {
+		var _p0 = intervals;
+		if (_p0.ctor === '[]') {
+			return _elm_lang$core$Task$succeed(processes);
+		} else {
+			var _p1 = _p0._0;
+			return A2(
+				_elm_lang$core$Task$andThen,
+				_elm_lang$core$Native_Scheduler.spawn(
+					A2(
+						_elm_lang$core$Time$setInterval,
+						_p1,
+						A2(_elm_lang$core$Platform$sendToSelf, router, _p1))),
+				function (id) {
+					return A3(
+						_elm_lang$core$Time$spawnHelp,
+						router,
+						_p0._1,
+						A3(_elm_lang$core$Dict$insert, _p1, id, processes));
+				});
+		}
+	});
+var _elm_lang$core$Time$addMySub = F2(
+	function (_p2, state) {
+		var _p3 = _p2;
+		var _p6 = _p3._1;
+		var _p5 = _p3._0;
+		var _p4 = A2(_elm_lang$core$Dict$get, _p5, state);
+		if (_p4.ctor === 'Nothing') {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				_elm_lang$core$Native_List.fromArray(
+					[_p6]),
+				state);
+		} else {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				A2(_elm_lang$core$List_ops['::'], _p6, _p4._0),
+				state);
+		}
+	});
+var _elm_lang$core$Time$inMilliseconds = function (t) {
+	return t;
+};
+var _elm_lang$core$Time$millisecond = 1;
+var _elm_lang$core$Time$second = 1000 * _elm_lang$core$Time$millisecond;
+var _elm_lang$core$Time$minute = 60 * _elm_lang$core$Time$second;
+var _elm_lang$core$Time$hour = 60 * _elm_lang$core$Time$minute;
+var _elm_lang$core$Time$inHours = function (t) {
+	return t / _elm_lang$core$Time$hour;
+};
+var _elm_lang$core$Time$inMinutes = function (t) {
+	return t / _elm_lang$core$Time$minute;
+};
+var _elm_lang$core$Time$inSeconds = function (t) {
+	return t / _elm_lang$core$Time$second;
+};
+var _elm_lang$core$Time$now = _elm_lang$core$Native_Time.now;
+var _elm_lang$core$Time$onSelfMsg = F3(
+	function (router, interval, state) {
+		var _p7 = A2(_elm_lang$core$Dict$get, interval, state.taggers);
+		if (_p7.ctor === 'Nothing') {
+			return _elm_lang$core$Task$succeed(state);
+		} else {
+			return A2(
+				_elm_lang$core$Task$andThen,
+				_elm_lang$core$Time$now,
+				function (time) {
+					return A2(
+						_elm_lang$core$Task$andThen,
+						_elm_lang$core$Task$sequence(
+							A2(
+								_elm_lang$core$List$map,
+								function (tagger) {
+									return A2(
+										_elm_lang$core$Platform$sendToApp,
+										router,
+										tagger(time));
+								},
+								_p7._0)),
+						function (_p8) {
+							return _elm_lang$core$Task$succeed(state);
+						});
+				});
+		}
+	});
+var _elm_lang$core$Time$subscription = _elm_lang$core$Native_Platform.leaf('Time');
+var _elm_lang$core$Time$State = F2(
+	function (a, b) {
+		return {taggers: a, processes: b};
+	});
+var _elm_lang$core$Time$init = _elm_lang$core$Task$succeed(
+	A2(_elm_lang$core$Time$State, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty));
+var _elm_lang$core$Time$onEffects = F3(
+	function (router, subs, _p9) {
+		var _p10 = _p9;
+		var rightStep = F3(
+			function (_p12, id, _p11) {
+				var _p13 = _p11;
+				return {
+					ctor: '_Tuple3',
+					_0: _p13._0,
+					_1: _p13._1,
+					_2: A2(
+						_elm_lang$core$Task$andThen,
+						_elm_lang$core$Native_Scheduler.kill(id),
+						function (_p14) {
+							return _p13._2;
+						})
+				};
+			});
+		var bothStep = F4(
+			function (interval, taggers, id, _p15) {
+				var _p16 = _p15;
+				return {
+					ctor: '_Tuple3',
+					_0: _p16._0,
+					_1: A3(_elm_lang$core$Dict$insert, interval, id, _p16._1),
+					_2: _p16._2
+				};
+			});
+		var leftStep = F3(
+			function (interval, taggers, _p17) {
+				var _p18 = _p17;
+				return {
+					ctor: '_Tuple3',
+					_0: A2(_elm_lang$core$List_ops['::'], interval, _p18._0),
+					_1: _p18._1,
+					_2: _p18._2
+				};
+			});
+		var newTaggers = A3(_elm_lang$core$List$foldl, _elm_lang$core$Time$addMySub, _elm_lang$core$Dict$empty, subs);
+		var _p19 = A6(
+			_elm_lang$core$Dict$merge,
+			leftStep,
+			bothStep,
+			rightStep,
+			newTaggers,
+			_p10.processes,
+			{
+				ctor: '_Tuple3',
+				_0: _elm_lang$core$Native_List.fromArray(
+					[]),
+				_1: _elm_lang$core$Dict$empty,
+				_2: _elm_lang$core$Task$succeed(
+					{ctor: '_Tuple0'})
+			});
+		var spawnList = _p19._0;
+		var existingDict = _p19._1;
+		var killTask = _p19._2;
+		return A2(
+			_elm_lang$core$Task$andThen,
+			killTask,
+			function (_p20) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					A3(_elm_lang$core$Time$spawnHelp, router, spawnList, existingDict),
+					function (newProcesses) {
+						return _elm_lang$core$Task$succeed(
+							A2(_elm_lang$core$Time$State, newTaggers, newProcesses));
+					});
+			});
+	});
+var _elm_lang$core$Time$Every = F2(
+	function (a, b) {
+		return {ctor: 'Every', _0: a, _1: b};
+	});
+var _elm_lang$core$Time$every = F2(
+	function (interval, tagger) {
+		return _elm_lang$core$Time$subscription(
+			A2(_elm_lang$core$Time$Every, interval, tagger));
+	});
+var _elm_lang$core$Time$subMap = F2(
+	function (f, _p21) {
+		var _p22 = _p21;
+		return A2(
+			_elm_lang$core$Time$Every,
+			_p22._0,
+			function (_p23) {
+				return f(
+					_p22._1(_p23));
+			});
+	});
+_elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
+var _elm_lang$core$Process$kill = _elm_lang$core$Native_Scheduler.kill;
+var _elm_lang$core$Process$sleep = _elm_lang$core$Native_Scheduler.sleep;
+var _elm_lang$core$Process$spawn = _elm_lang$core$Native_Scheduler.spawn;
+var _elm_lang$animation_frame$AnimationFrame$rAF = _elm_lang$animation_frame$Native_AnimationFrame.rAF;
+var _elm_lang$animation_frame$AnimationFrame$subscription = _elm_lang$core$Native_Platform.leaf('AnimationFrame');
+var _elm_lang$animation_frame$AnimationFrame$State = F3(
+	function (a, b, c) {
+		return {subs: a, request: b, oldTime: c};
+	});
+var _elm_lang$animation_frame$AnimationFrame$init = _elm_lang$core$Task$succeed(
+	A3(
+		_elm_lang$animation_frame$AnimationFrame$State,
+		_elm_lang$core$Native_List.fromArray(
+			[]),
+		_elm_lang$core$Maybe$Nothing,
+		0));
+var _elm_lang$animation_frame$AnimationFrame$onEffects = F3(
+	function (router, subs, _p0) {
+		var _p1 = _p0;
+		var _p5 = _p1.request;
+		var _p4 = _p1.oldTime;
+		var _p2 = {ctor: '_Tuple2', _0: _p5, _1: subs};
+		if (_p2._0.ctor === 'Nothing') {
+			if (_p2._1.ctor === '[]') {
+				return _elm_lang$core$Task$succeed(
+					A3(
+						_elm_lang$animation_frame$AnimationFrame$State,
+						_elm_lang$core$Native_List.fromArray(
+							[]),
+						_elm_lang$core$Maybe$Nothing,
+						_p4));
+			} else {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					_elm_lang$core$Process$spawn(
+						A2(
+							_elm_lang$core$Task$andThen,
+							_elm_lang$animation_frame$AnimationFrame$rAF,
+							_elm_lang$core$Platform$sendToSelf(router))),
+					function (pid) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							_elm_lang$core$Time$now,
+							function (time) {
+								return _elm_lang$core$Task$succeed(
+									A3(
+										_elm_lang$animation_frame$AnimationFrame$State,
+										subs,
+										_elm_lang$core$Maybe$Just(pid),
+										time));
+							});
+					});
+			}
+		} else {
+			if (_p2._1.ctor === '[]') {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					_elm_lang$core$Process$kill(_p2._0._0),
+					function (_p3) {
+						return _elm_lang$core$Task$succeed(
+							A3(
+								_elm_lang$animation_frame$AnimationFrame$State,
+								_elm_lang$core$Native_List.fromArray(
+									[]),
+								_elm_lang$core$Maybe$Nothing,
+								_p4));
+					});
+			} else {
+				return _elm_lang$core$Task$succeed(
+					A3(_elm_lang$animation_frame$AnimationFrame$State, subs, _p5, _p4));
+			}
+		}
+	});
+var _elm_lang$animation_frame$AnimationFrame$onSelfMsg = F3(
+	function (router, newTime, _p6) {
+		var _p7 = _p6;
+		var _p10 = _p7.subs;
+		var diff = newTime - _p7.oldTime;
+		var send = function (sub) {
+			var _p8 = sub;
+			if (_p8.ctor === 'Time') {
+				return A2(
+					_elm_lang$core$Platform$sendToApp,
+					router,
+					_p8._0(newTime));
+			} else {
+				return A2(
+					_elm_lang$core$Platform$sendToApp,
+					router,
+					_p8._0(diff));
+			}
+		};
+		return A2(
+			_elm_lang$core$Task$andThen,
+			_elm_lang$core$Process$spawn(
+				A2(
+					_elm_lang$core$Task$andThen,
+					_elm_lang$animation_frame$AnimationFrame$rAF,
+					_elm_lang$core$Platform$sendToSelf(router))),
+			function (pid) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					_elm_lang$core$Task$sequence(
+						A2(_elm_lang$core$List$map, send, _p10)),
+					function (_p9) {
+						return _elm_lang$core$Task$succeed(
+							A3(
+								_elm_lang$animation_frame$AnimationFrame$State,
+								_p10,
+								_elm_lang$core$Maybe$Just(pid),
+								newTime));
+					});
+			});
+	});
+var _elm_lang$animation_frame$AnimationFrame$Diff = function (a) {
+	return {ctor: 'Diff', _0: a};
+};
+var _elm_lang$animation_frame$AnimationFrame$diffs = function (tagger) {
+	return _elm_lang$animation_frame$AnimationFrame$subscription(
+		_elm_lang$animation_frame$AnimationFrame$Diff(tagger));
+};
+var _elm_lang$animation_frame$AnimationFrame$Time = function (a) {
+	return {ctor: 'Time', _0: a};
+};
+var _elm_lang$animation_frame$AnimationFrame$times = function (tagger) {
+	return _elm_lang$animation_frame$AnimationFrame$subscription(
+		_elm_lang$animation_frame$AnimationFrame$Time(tagger));
+};
+var _elm_lang$animation_frame$AnimationFrame$subMap = F2(
+	function (func, sub) {
+		var _p11 = sub;
+		if (_p11.ctor === 'Time') {
+			return _elm_lang$animation_frame$AnimationFrame$Time(
+				function (_p12) {
+					return func(
+						_p11._0(_p12));
+				});
+		} else {
+			return _elm_lang$animation_frame$AnimationFrame$Diff(
+				function (_p13) {
+					return func(
+						_p11._0(_p13));
+				});
+		}
+	});
+_elm_lang$core$Native_Platform.effectManagers['AnimationFrame'] = {pkg: 'elm-lang/animation-frame', init: _elm_lang$animation_frame$AnimationFrame$init, onEffects: _elm_lang$animation_frame$AnimationFrame$onEffects, onSelfMsg: _elm_lang$animation_frame$AnimationFrame$onSelfMsg, tag: 'sub', subMap: _elm_lang$animation_frame$AnimationFrame$subMap};
 //import Native.List //
 
 var _elm_lang$core$Native_Array = function() {
@@ -6265,452 +6889,6 @@ var _elm_lang$core$Array$repeat = F2(
 			_elm_lang$core$Basics$always(e));
 	});
 var _elm_lang$core$Array$Array = {ctor: 'Array'};
-var _elm_lang$core$Task$onError = _elm_lang$core$Native_Scheduler.onError;
-var _elm_lang$core$Task$andThen = _elm_lang$core$Native_Scheduler.andThen;
-var _elm_lang$core$Task$spawnCmd = F2(
-	function (router, _p0) {
-		var _p1 = _p0;
-		return _elm_lang$core$Native_Scheduler.spawn(
-			A2(
-				_elm_lang$core$Task$andThen,
-				_p1._0,
-				_elm_lang$core$Platform$sendToApp(router)));
-	});
-var _elm_lang$core$Task$fail = _elm_lang$core$Native_Scheduler.fail;
-var _elm_lang$core$Task$mapError = F2(
-	function (f, task) {
-		return A2(
-			_elm_lang$core$Task$onError,
-			task,
-			function (err) {
-				return _elm_lang$core$Task$fail(
-					f(err));
-			});
-	});
-var _elm_lang$core$Task$succeed = _elm_lang$core$Native_Scheduler.succeed;
-var _elm_lang$core$Task$map = F2(
-	function (func, taskA) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			taskA,
-			function (a) {
-				return _elm_lang$core$Task$succeed(
-					func(a));
-			});
-	});
-var _elm_lang$core$Task$map2 = F3(
-	function (func, taskA, taskB) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			taskA,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					taskB,
-					function (b) {
-						return _elm_lang$core$Task$succeed(
-							A2(func, a, b));
-					});
-			});
-	});
-var _elm_lang$core$Task$map3 = F4(
-	function (func, taskA, taskB, taskC) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			taskA,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					taskB,
-					function (b) {
-						return A2(
-							_elm_lang$core$Task$andThen,
-							taskC,
-							function (c) {
-								return _elm_lang$core$Task$succeed(
-									A3(func, a, b, c));
-							});
-					});
-			});
-	});
-var _elm_lang$core$Task$map4 = F5(
-	function (func, taskA, taskB, taskC, taskD) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			taskA,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					taskB,
-					function (b) {
-						return A2(
-							_elm_lang$core$Task$andThen,
-							taskC,
-							function (c) {
-								return A2(
-									_elm_lang$core$Task$andThen,
-									taskD,
-									function (d) {
-										return _elm_lang$core$Task$succeed(
-											A4(func, a, b, c, d));
-									});
-							});
-					});
-			});
-	});
-var _elm_lang$core$Task$map5 = F6(
-	function (func, taskA, taskB, taskC, taskD, taskE) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			taskA,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					taskB,
-					function (b) {
-						return A2(
-							_elm_lang$core$Task$andThen,
-							taskC,
-							function (c) {
-								return A2(
-									_elm_lang$core$Task$andThen,
-									taskD,
-									function (d) {
-										return A2(
-											_elm_lang$core$Task$andThen,
-											taskE,
-											function (e) {
-												return _elm_lang$core$Task$succeed(
-													A5(func, a, b, c, d, e));
-											});
-									});
-							});
-					});
-			});
-	});
-var _elm_lang$core$Task$andMap = F2(
-	function (taskFunc, taskValue) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			taskFunc,
-			function (func) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					taskValue,
-					function (value) {
-						return _elm_lang$core$Task$succeed(
-							func(value));
-					});
-			});
-	});
-var _elm_lang$core$Task$sequence = function (tasks) {
-	var _p2 = tasks;
-	if (_p2.ctor === '[]') {
-		return _elm_lang$core$Task$succeed(
-			_elm_lang$core$Native_List.fromArray(
-				[]));
-	} else {
-		return A3(
-			_elm_lang$core$Task$map2,
-			F2(
-				function (x, y) {
-					return A2(_elm_lang$core$List_ops['::'], x, y);
-				}),
-			_p2._0,
-			_elm_lang$core$Task$sequence(_p2._1));
-	}
-};
-var _elm_lang$core$Task$onEffects = F3(
-	function (router, commands, state) {
-		return A2(
-			_elm_lang$core$Task$map,
-			function (_p3) {
-				return {ctor: '_Tuple0'};
-			},
-			_elm_lang$core$Task$sequence(
-				A2(
-					_elm_lang$core$List$map,
-					_elm_lang$core$Task$spawnCmd(router),
-					commands)));
-	});
-var _elm_lang$core$Task$toMaybe = function (task) {
-	return A2(
-		_elm_lang$core$Task$onError,
-		A2(_elm_lang$core$Task$map, _elm_lang$core$Maybe$Just, task),
-		function (_p4) {
-			return _elm_lang$core$Task$succeed(_elm_lang$core$Maybe$Nothing);
-		});
-};
-var _elm_lang$core$Task$fromMaybe = F2(
-	function ($default, maybe) {
-		var _p5 = maybe;
-		if (_p5.ctor === 'Just') {
-			return _elm_lang$core$Task$succeed(_p5._0);
-		} else {
-			return _elm_lang$core$Task$fail($default);
-		}
-	});
-var _elm_lang$core$Task$toResult = function (task) {
-	return A2(
-		_elm_lang$core$Task$onError,
-		A2(_elm_lang$core$Task$map, _elm_lang$core$Result$Ok, task),
-		function (msg) {
-			return _elm_lang$core$Task$succeed(
-				_elm_lang$core$Result$Err(msg));
-		});
-};
-var _elm_lang$core$Task$fromResult = function (result) {
-	var _p6 = result;
-	if (_p6.ctor === 'Ok') {
-		return _elm_lang$core$Task$succeed(_p6._0);
-	} else {
-		return _elm_lang$core$Task$fail(_p6._0);
-	}
-};
-var _elm_lang$core$Task$init = _elm_lang$core$Task$succeed(
-	{ctor: '_Tuple0'});
-var _elm_lang$core$Task$onSelfMsg = F3(
-	function (_p9, _p8, _p7) {
-		return _elm_lang$core$Task$succeed(
-			{ctor: '_Tuple0'});
-	});
-var _elm_lang$core$Task$command = _elm_lang$core$Native_Platform.leaf('Task');
-var _elm_lang$core$Task$T = function (a) {
-	return {ctor: 'T', _0: a};
-};
-var _elm_lang$core$Task$perform = F3(
-	function (onFail, onSuccess, task) {
-		return _elm_lang$core$Task$command(
-			_elm_lang$core$Task$T(
-				A2(
-					_elm_lang$core$Task$onError,
-					A2(_elm_lang$core$Task$map, onSuccess, task),
-					function (x) {
-						return _elm_lang$core$Task$succeed(
-							onFail(x));
-					})));
-	});
-var _elm_lang$core$Task$cmdMap = F2(
-	function (tagger, _p10) {
-		var _p11 = _p10;
-		return _elm_lang$core$Task$T(
-			A2(_elm_lang$core$Task$map, tagger, _p11._0));
-	});
-_elm_lang$core$Native_Platform.effectManagers['Task'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Task$init, onEffects: _elm_lang$core$Task$onEffects, onSelfMsg: _elm_lang$core$Task$onSelfMsg, tag: 'cmd', cmdMap: _elm_lang$core$Task$cmdMap};
-//import Native.Scheduler //
-
-var _elm_lang$core$Native_Time = function() {
-
-var now = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
-{
-	callback(_elm_lang$core$Native_Scheduler.succeed(Date.now()));
-});
-
-function setInterval_(interval, task)
-{
-	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
-	{
-		var id = setInterval(function() {
-			_elm_lang$core$Native_Scheduler.rawSpawn(task);
-		}, interval);
-
-		return function() { clearInterval(id); };
-	});
-}
-
-return {
-	now: now,
-	setInterval_: F2(setInterval_)
-};
-
-}();var _elm_lang$core$Time$setInterval = _elm_lang$core$Native_Time.setInterval_;
-var _elm_lang$core$Time$spawnHelp = F3(
-	function (router, intervals, processes) {
-		var _p0 = intervals;
-		if (_p0.ctor === '[]') {
-			return _elm_lang$core$Task$succeed(processes);
-		} else {
-			var _p1 = _p0._0;
-			return A2(
-				_elm_lang$core$Task$andThen,
-				_elm_lang$core$Native_Scheduler.spawn(
-					A2(
-						_elm_lang$core$Time$setInterval,
-						_p1,
-						A2(_elm_lang$core$Platform$sendToSelf, router, _p1))),
-				function (id) {
-					return A3(
-						_elm_lang$core$Time$spawnHelp,
-						router,
-						_p0._1,
-						A3(_elm_lang$core$Dict$insert, _p1, id, processes));
-				});
-		}
-	});
-var _elm_lang$core$Time$addMySub = F2(
-	function (_p2, state) {
-		var _p3 = _p2;
-		var _p6 = _p3._1;
-		var _p5 = _p3._0;
-		var _p4 = A2(_elm_lang$core$Dict$get, _p5, state);
-		if (_p4.ctor === 'Nothing') {
-			return A3(
-				_elm_lang$core$Dict$insert,
-				_p5,
-				_elm_lang$core$Native_List.fromArray(
-					[_p6]),
-				state);
-		} else {
-			return A3(
-				_elm_lang$core$Dict$insert,
-				_p5,
-				A2(_elm_lang$core$List_ops['::'], _p6, _p4._0),
-				state);
-		}
-	});
-var _elm_lang$core$Time$inMilliseconds = function (t) {
-	return t;
-};
-var _elm_lang$core$Time$millisecond = 1;
-var _elm_lang$core$Time$second = 1000 * _elm_lang$core$Time$millisecond;
-var _elm_lang$core$Time$minute = 60 * _elm_lang$core$Time$second;
-var _elm_lang$core$Time$hour = 60 * _elm_lang$core$Time$minute;
-var _elm_lang$core$Time$inHours = function (t) {
-	return t / _elm_lang$core$Time$hour;
-};
-var _elm_lang$core$Time$inMinutes = function (t) {
-	return t / _elm_lang$core$Time$minute;
-};
-var _elm_lang$core$Time$inSeconds = function (t) {
-	return t / _elm_lang$core$Time$second;
-};
-var _elm_lang$core$Time$now = _elm_lang$core$Native_Time.now;
-var _elm_lang$core$Time$onSelfMsg = F3(
-	function (router, interval, state) {
-		var _p7 = A2(_elm_lang$core$Dict$get, interval, state.taggers);
-		if (_p7.ctor === 'Nothing') {
-			return _elm_lang$core$Task$succeed(state);
-		} else {
-			return A2(
-				_elm_lang$core$Task$andThen,
-				_elm_lang$core$Time$now,
-				function (time) {
-					return A2(
-						_elm_lang$core$Task$andThen,
-						_elm_lang$core$Task$sequence(
-							A2(
-								_elm_lang$core$List$map,
-								function (tagger) {
-									return A2(
-										_elm_lang$core$Platform$sendToApp,
-										router,
-										tagger(time));
-								},
-								_p7._0)),
-						function (_p8) {
-							return _elm_lang$core$Task$succeed(state);
-						});
-				});
-		}
-	});
-var _elm_lang$core$Time$subscription = _elm_lang$core$Native_Platform.leaf('Time');
-var _elm_lang$core$Time$State = F2(
-	function (a, b) {
-		return {taggers: a, processes: b};
-	});
-var _elm_lang$core$Time$init = _elm_lang$core$Task$succeed(
-	A2(_elm_lang$core$Time$State, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty));
-var _elm_lang$core$Time$onEffects = F3(
-	function (router, subs, _p9) {
-		var _p10 = _p9;
-		var rightStep = F3(
-			function (_p12, id, _p11) {
-				var _p13 = _p11;
-				return {
-					ctor: '_Tuple3',
-					_0: _p13._0,
-					_1: _p13._1,
-					_2: A2(
-						_elm_lang$core$Task$andThen,
-						_elm_lang$core$Native_Scheduler.kill(id),
-						function (_p14) {
-							return _p13._2;
-						})
-				};
-			});
-		var bothStep = F4(
-			function (interval, taggers, id, _p15) {
-				var _p16 = _p15;
-				return {
-					ctor: '_Tuple3',
-					_0: _p16._0,
-					_1: A3(_elm_lang$core$Dict$insert, interval, id, _p16._1),
-					_2: _p16._2
-				};
-			});
-		var leftStep = F3(
-			function (interval, taggers, _p17) {
-				var _p18 = _p17;
-				return {
-					ctor: '_Tuple3',
-					_0: A2(_elm_lang$core$List_ops['::'], interval, _p18._0),
-					_1: _p18._1,
-					_2: _p18._2
-				};
-			});
-		var newTaggers = A3(_elm_lang$core$List$foldl, _elm_lang$core$Time$addMySub, _elm_lang$core$Dict$empty, subs);
-		var _p19 = A6(
-			_elm_lang$core$Dict$merge,
-			leftStep,
-			bothStep,
-			rightStep,
-			newTaggers,
-			_p10.processes,
-			{
-				ctor: '_Tuple3',
-				_0: _elm_lang$core$Native_List.fromArray(
-					[]),
-				_1: _elm_lang$core$Dict$empty,
-				_2: _elm_lang$core$Task$succeed(
-					{ctor: '_Tuple0'})
-			});
-		var spawnList = _p19._0;
-		var existingDict = _p19._1;
-		var killTask = _p19._2;
-		return A2(
-			_elm_lang$core$Task$andThen,
-			killTask,
-			function (_p20) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					A3(_elm_lang$core$Time$spawnHelp, router, spawnList, existingDict),
-					function (newProcesses) {
-						return _elm_lang$core$Task$succeed(
-							A2(_elm_lang$core$Time$State, newTaggers, newProcesses));
-					});
-			});
-	});
-var _elm_lang$core$Time$Every = F2(
-	function (a, b) {
-		return {ctor: 'Every', _0: a, _1: b};
-	});
-var _elm_lang$core$Time$every = F2(
-	function (interval, tagger) {
-		return _elm_lang$core$Time$subscription(
-			A2(_elm_lang$core$Time$Every, interval, tagger));
-	});
-var _elm_lang$core$Time$subMap = F2(
-	function (f, _p21) {
-		var _p22 = _p21;
-		return A2(
-			_elm_lang$core$Time$Every,
-			_p22._0,
-			function (_p23) {
-				return f(
-					_p22._1(_p23));
-			});
-	});
-_elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
 //import Maybe, Native.Array, Native.List, Native.Utils, Result //
 
 var _elm_lang$core$Native_Json = function() {
@@ -9910,42 +10088,27 @@ var _user$project$Direction$directionList = _elm_lang$core$Native_List.fromArray
 var _user$project$Direction$getIndex = function (dir) {
 	return A2(_elm_community$list_extra$List_Extra$elemIndex, dir, _user$project$Direction$directionList);
 };
-var _user$project$Direction$getTransformRotation = function (dir) {
-	var angle = function () {
-		var _p0 = _user$project$Direction$getIndex(dir);
-		if (_p0.ctor === 'Just') {
-			return _p0._0 * 45;
-		} else {
-			return 0;
-		}
-	}();
-	var suffix = 'deg)';
-	var prefix = 'rotate(';
-	return A2(
-		_elm_lang$core$Basics_ops['++'],
-		prefix,
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			_elm_lang$core$Basics$toString(angle),
-			suffix));
+var _user$project$Direction$getAngle = function (dir) {
+	var _p0 = _user$project$Direction$getIndex(dir);
+	if (_p0.ctor === 'Just') {
+		return _p0._0 * 45;
+	} else {
+		return 0;
+	}
 };
 var _user$project$Direction$getSideDirections = function (dir) {
 	var numDirections = _elm_lang$core$List$length(_user$project$Direction$directionList);
-	var index = function () {
-		var _p1 = _user$project$Direction$getIndex(dir);
-		if (_p1.ctor === 'Just') {
-			return _p1._0;
-		} else {
-			return 0;
-		}
-	}();
-	var _p2 = {
+	var index = A2(
+		_elm_lang$core$Maybe$withDefault,
+		0,
+		_user$project$Direction$getIndex(dir));
+	var _p1 = {
 		ctor: '_Tuple2',
 		_0: A2(_elm_lang$core$Basics_ops['%'], index + 2, numDirections),
 		_1: A2(_elm_lang$core$Basics_ops['%'], index + 6, numDirections)
 	};
-	var leftSideIndex = _p2._0;
-	var rightSideIndex = _p2._1;
+	var leftSideIndex = _p1._0;
+	var rightSideIndex = _p1._1;
 	return {
 		ctor: '_Tuple2',
 		_0: A2(
@@ -10134,6 +10297,31 @@ var _user$project$Map$fireCannons = F2(
 		var cannonDirections = _user$project$Direction$getSideDirections(actor.direction);
 		return map;
 	});
+var _user$project$Map$getPiratesAndWreckages = F2(
+	function (otherActors, pirates) {
+		var initialActors = A2(_elm_lang$core$Basics_ops['++'], otherActors, pirates);
+		var _p0 = A2(
+			_elm_lang$core$List$partition,
+			function (pirate) {
+				return _elm_lang$core$List$isEmpty(
+					A2(
+						_elm_lang$core$List$filter,
+						function (actor) {
+							return (!_elm_lang$core$Native_Utils.eq(pirate, actor)) && _elm_lang$core$Native_Utils.eq(pirate.location, actor.location);
+						},
+						initialActors));
+			},
+			pirates);
+		var livingPirates = _p0._0;
+		var crashedPirates = _p0._1;
+		var wreckages = A2(
+			_elm_lang$core$List$map,
+			function (actor) {
+				return A3(_user$project$Actor$Actor, _user$project$Actor$WRECKAGE, actor.location, _user$project$Direction$NORTH);
+			},
+			crashedPirates);
+		return A2(_elm_lang$core$Basics_ops['++'], livingPirates, wreckages);
+	});
 var _user$project$Map$movePirate = F2(
 	function (playerLocation, pirate) {
 		var newDirection = A2(_user$project$Location$getDirection, pirate.location, playerLocation);
@@ -10144,24 +10332,25 @@ var _user$project$Map$movePirate = F2(
 	});
 var _user$project$Map$movePirates = F3(
 	function (playerX, playerY, map) {
-		var _p0 = A2(_elm_lang$core$List$partition, _user$project$Actor$isPlayer, map.actors);
-		var players = _p0._0;
-		var nonPlayerActors = _p0._1;
-		var _p1 = A2(_elm_lang$core$List$partition, _user$project$Actor$isPirate, nonPlayerActors);
-		var pirates = _p1._0;
-		var nonShipActors = _p1._1;
+		var _p1 = A2(_elm_lang$core$List$partition, _user$project$Actor$isPlayer, map.actors);
+		var players = _p1._0;
+		var nonPlayerActors = _p1._1;
+		var _p2 = A2(_elm_lang$core$List$partition, _user$project$Actor$isPirate, nonPlayerActors);
+		var pirates = _p2._0;
+		var nonShipActors = _p2._1;
 		var playerLocation = A2(_user$project$Location$Location, playerX, playerY);
 		var movedPirates = A2(
 			_elm_lang$core$List$map,
 			_user$project$Map$movePirate(playerLocation),
 			pirates);
+		var piratesAndWreckages = A2(_user$project$Map$getPiratesAndWreckages, nonShipActors, movedPirates);
 		return _elm_lang$core$Native_Utils.update(
 			map,
 			{
 				actors: A2(
 					_elm_lang$core$Basics_ops['++'],
 					nonShipActors,
-					A2(_elm_lang$core$Basics_ops['++'], movedPirates, players))
+					A2(_elm_lang$core$Basics_ops['++'], piratesAndWreckages, players))
 			});
 	});
 var _user$project$Map$moveActor = F4(
@@ -10205,17 +10394,17 @@ var _user$project$Map$getPlayer = function (map) {
 	var actors = map.actors;
 	var players = A2(_elm_lang$core$List$filter, _user$project$Actor$isPlayer, actors);
 	var player = function () {
-		var _p2 = _elm_lang$core$List$head(players);
-		if (_p2.ctor === 'Nothing') {
+		var _p3 = _elm_lang$core$List$head(players);
+		if (_p3.ctor === 'Nothing') {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Map',
 				{
-					start: {line: 165, column: 7},
-					end: {line: 169, column: 16}
+					start: {line: 194, column: 13},
+					end: {line: 199, column: 26}
 				},
-				_p2)('No player found');
+				_p3)('No player found');
 		} else {
-			return _p2._0;
+			return _p3._0;
 		}
 	}();
 	return player;
@@ -10233,18 +10422,18 @@ var _user$project$Map$initPirate = F4(
 	function (size, level, seed, actors) {
 		initPirate:
 		while (true) {
-			var _p4 = A2(
-				_elm_lang$core$Random$step,
-				A2(_elm_lang$core$Random$int, 0, size - 1),
-				seed);
-			var x = _p4._0;
-			var seed1 = _p4._1;
 			var _p5 = A2(
 				_elm_lang$core$Random$step,
 				A2(_elm_lang$core$Random$int, 0, size - 1),
+				seed);
+			var x = _p5._0;
+			var seed1 = _p5._1;
+			var _p6 = A2(
+				_elm_lang$core$Random$step,
+				A2(_elm_lang$core$Random$int, 0, size - 1),
 				seed1);
-			var y = _p5._0;
-			var seed2 = _p5._1;
+			var y = _p6._0;
+			var seed2 = _p6._1;
 			var loc = A2(_user$project$Location$Location, x, y);
 			if (A2(_user$project$Map$hasActor, loc, actors)) {
 				var _v1 = size,
@@ -10275,18 +10464,18 @@ var _user$project$Map$initPirates = F4(
 	});
 var _user$project$Map$initIsland = F2(
 	function (size, seed) {
-		var _p6 = A2(
-			_elm_lang$core$Random$step,
-			A2(_elm_lang$core$Random$int, 1, size - 2),
-			seed);
-		var x = _p6._0;
-		var seed1 = _p6._1;
 		var _p7 = A2(
 			_elm_lang$core$Random$step,
 			A2(_elm_lang$core$Random$int, 1, size - 2),
+			seed);
+		var x = _p7._0;
+		var seed1 = _p7._1;
+		var _p8 = A2(
+			_elm_lang$core$Random$step,
+			A2(_elm_lang$core$Random$int, 1, size - 2),
 			seed1);
-		var y = _p7._0;
-		var seed2 = _p7._1;
+		var y = _p8._0;
+		var seed2 = _p8._1;
 		return A3(
 			_user$project$Actor$Actor,
 			_user$project$Actor$ISLAND,
@@ -10297,12 +10486,12 @@ var _user$project$Map$initIslands = F2(
 	function (size, seed) {
 		var maxIslands = (((size * size) * 15) / 100) | 0;
 		var minIslands = (((size * size) * 5) / 100) | 0;
-		var _p8 = A2(
+		var _p9 = A2(
 			_elm_lang$core$Random$step,
 			A2(_elm_lang$core$Random$int, minIslands, maxIslands),
 			seed);
-		var numIslands = _p8._0;
-		var seed1 = _p8._1;
+		var numIslands = _p9._0;
+		var seed1 = _p9._1;
 		var seeds = A2(_user$project$RandomHelper$makeSeeds, seed1, numIslands);
 		var islands = A2(
 			_elm_lang$core$List$map,
@@ -10360,7 +10549,7 @@ var _user$project$Map$Map = F4(
 	function (a, b, c, d) {
 		return {size: a, level: b, actors: c, tiles: d};
 	});
-var _user$project$Map$initializeMap = F3(
+var _user$project$Map$initMap = F3(
 	function (size, level, seedNum) {
 		var tiles = _user$project$Map$initTiles(size);
 		var player = _user$project$Map$initPlayer(size);
@@ -10389,7 +10578,21 @@ var _user$project$Map$initializeMap = F3(
 						[player]))));
 		return A4(_user$project$Map$Map, size, level, newActors, tiles);
 	});
-var _user$project$Main$spinRate = 200 * _elm_lang$core$Time$millisecond;
+var _user$project$Map$GAME_OVER = {ctor: 'GAME_OVER'};
+var _user$project$Map$NEXT_LEVEL = {ctor: 'NEXT_LEVEL'};
+var _user$project$Map$PLAYING = {ctor: 'PLAYING'};
+var _user$project$Map$getGameState = function (map) {
+	var pirates = A2(_elm_lang$core$List$filter, _user$project$Actor$isPirate, map.actors);
+	var player = _user$project$Map$getPlayer(map);
+	var collidingPirates = A2(
+		_elm_lang$core$List$filter,
+		function (actor) {
+			return _elm_lang$core$Native_Utils.eq(actor.subtype, _user$project$Actor$PIRATE) && _elm_lang$core$Native_Utils.eq(actor.location, player.location);
+		},
+		map.actors);
+	return _elm_lang$core$Basics$not(
+		_elm_lang$core$List$isEmpty(collidingPirates)) ? _user$project$Map$GAME_OVER : (_elm_lang$core$List$isEmpty(pirates) ? _user$project$Map$NEXT_LEVEL : _user$project$Map$PLAYING);
+};
 var _user$project$Main$getTileSize = function (size) {
 	return A2(
 		_elm_lang$core$Basics_ops['++'],
@@ -10415,97 +10618,116 @@ var _user$project$Main$getOffset = F2(
 						_elm_lang$core$Basics$toString(size),
 						' )'))));
 	});
+var _user$project$Main$animationTime = 500;
 var _user$project$Main$update = F2(
 	function (msg, model) {
 		var _p0 = msg;
 		switch (_p0.ctor) {
 			case 'TileClicked':
-				var _p2 = _p0._1;
-				var _p1 = _p0._0;
-				var playerMovedMap = A3(_user$project$Map$movePlayer, _p1, _p2, model.map);
+				var _p3 = _p0._1;
+				var _p2 = _p0._0;
+				var playerMovedMap = A3(_user$project$Map$movePlayer, _p2, _p3, model.map);
 				var playerUpdated = !_elm_lang$core$Native_Utils.eq(
 					_user$project$Map$getPlayer(model.map),
 					_user$project$Map$getPlayer(playerMovedMap));
-				var updatedMap = playerUpdated ? A3(_user$project$Map$movePirates, _p1, _p2, playerMovedMap) : model.map;
+				var _p1 = playerUpdated ? {
+					ctor: '_Tuple2',
+					_0: A3(_user$project$Map$movePirates, _p2, _p3, playerMovedMap),
+					_1: false
+				} : {ctor: '_Tuple2', _0: model.map, _1: true};
+				var updatedMap = _p1._0;
+				var enableInput = _p1._1;
+				var updatedMap2 = model.enableInput ? updatedMap : model.map;
+				var gameState = _user$project$Map$getGameState(updatedMap2);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{map: updatedMap}),
+						{map: updatedMap2, gameState: gameState, enableInput: enableInput}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'ActorClicked':
-				var _p4 = _p0._0;
-				var _p3 = _p4.subtype;
-				switch (_p3.ctor) {
-					case 'PLAYER':
-						return {
-							ctor: '_Tuple2',
-							_0: _elm_lang$core$Native_Utils.update(
-								model,
-								{
-									map: A2(_user$project$Map$fireCannons, _p4, model.map)
-								}),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
-					case 'WHIRLPOOL':
-						return {
-							ctor: '_Tuple2',
-							_0: _elm_lang$core$Native_Utils.update(
-								model,
-								{
-									map: A3(_user$project$Map$movePlayer, _p4.location.x, _p4.location.y, model.map)
-								}),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
-					default:
-						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-				}
+				var _p6 = _p0._0;
+				var _p4 = function () {
+					var _p5 = _p6.subtype;
+					switch (_p5.ctor) {
+						case 'PLAYER':
+							return {
+								ctor: '_Tuple2',
+								_0: A2(_user$project$Map$fireCannons, _p6, model.map),
+								_1: false
+							};
+						case 'WHIRLPOOL':
+							return {
+								ctor: '_Tuple2',
+								_0: A3(_user$project$Map$movePlayer, _p6.location.x, _p6.location.y, model.map),
+								_1: false
+							};
+						default:
+							return {ctor: '_Tuple2', _0: model.map, _1: true};
+					}
+				}();
+				var updatedMap = _p4._0;
+				var enableInput = _p4._1;
+				var updatedMap2 = model.enableInput ? updatedMap : model.map;
+				var gameState = _user$project$Map$getGameState(updatedMap2);
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{map: updatedMap2, gameState: gameState, enableInput: enableInput}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 			case 'SetRandomSeed':
-				var _p5 = _p0._0;
+				var _p7 = _p0._0;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							map: A3(_user$project$Map$initializeMap, 7, 1, _p5),
-							randomSeed: _p5
+							map: A3(_user$project$Map$initMap, 7, 1, _p7),
+							randomSeed: _p7
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
-			case 'RotateWhirlpool':
+			case 'HandleTimeDiff':
+				var _p8 = _p0._0;
+				var updatedTime = (_elm_lang$core$Native_Utils.cmp(model.timeSinceMove + _p8, _user$project$Main$animationTime) > 0) ? 0 : (model.timeSinceMove + _p8);
+				var enableInput = (_elm_lang$core$Native_Utils.eq(updatedTime, 0) && _elm_lang$core$Native_Utils.eq(model.gameState, _user$project$Map$PLAYING)) ? true : model.enableInput;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{whirlpoolAngle: model.whirlpoolAngle + 45}),
+						{timeSinceMove: updatedTime, enableInput: enableInput}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 		}
 	});
-var _user$project$Main$Model = F3(
-	function (a, b, c) {
-		return {map: a, randomSeed: b, whirlpoolAngle: c};
+var _user$project$Main$Model = F5(
+	function (a, b, c, d, e) {
+		return {map: a, randomSeed: b, timeSinceMove: c, enableInput: d, gameState: e};
 	});
 var _user$project$Main$None = {ctor: 'None'};
-var _user$project$Main$RotateWhirlpool = function (a) {
-	return {ctor: 'RotateWhirlpool', _0: a};
+var _user$project$Main$HandleTimeDiff = function (a) {
+	return {ctor: 'HandleTimeDiff', _0: a};
 };
 var _user$project$Main$subscriptions = function (model) {
-	return A2(_elm_lang$core$Time$every, _user$project$Main$spinRate, _user$project$Main$RotateWhirlpool);
+	return _elm_lang$animation_frame$AnimationFrame$diffs(_user$project$Main$HandleTimeDiff);
 };
 var _user$project$Main$SetRandomSeed = function (a) {
 	return {ctor: 'SetRandomSeed', _0: a};
 };
 var _user$project$Main$init = {
 	ctor: '_Tuple2',
-	_0: A3(
+	_0: A5(
 		_user$project$Main$Model,
-		A3(_user$project$Map$initializeMap, 7, 1, 0),
+		A3(_user$project$Map$initMap, 7, 1, 0),
 		0,
-		0),
+		0,
+		true,
+		_user$project$Map$PLAYING),
 	_1: A2(
 		_elm_lang$core$Random$generate,
 		_user$project$Main$SetRandomSeed,
@@ -10514,39 +10736,28 @@ var _user$project$Main$init = {
 var _user$project$Main$ActorClicked = function (a) {
 	return {ctor: 'ActorClicked', _0: a};
 };
-var _user$project$Main$viewActor = F3(
-	function (whirlpoolAngle, actor, mapSize) {
-		var directionTransform = _user$project$Direction$getTransformRotation(actor.direction);
-		var whirlpoolTransform = A2(
+var _user$project$Main$viewActor = F2(
+	function (actor, mapSize) {
+		var actorAngle = _user$project$Direction$getAngle(actor.direction);
+		var transform = A2(
 			_elm_lang$core$Basics_ops['++'],
 			'rotate(',
 			A2(
 				_elm_lang$core$Basics_ops['++'],
-				_elm_lang$core$Basics$toString(whirlpoolAngle),
+				_elm_lang$core$Basics$toString(actorAngle),
 				'deg)'));
-		var _p6 = {ctor: '_Tuple2', _0: 'transform .5s', _1: 'top .5s, left .5s'};
-		var whirlpoolTransition = _p6._0;
-		var defaultTransition = _p6._1;
-		var transition = function () {
-			var _p7 = actor.subtype;
-			if (_p7.ctor === 'WHIRLPOOL') {
-				return whirlpoolTransition;
-			} else {
-				return defaultTransition;
-			}
-		}();
+		var timeLabel = A2(
+			_elm_lang$core$Basics_ops['++'],
+			_elm_lang$core$Basics$toString(_user$project$Main$animationTime / 1000),
+			's');
+		var transition = A2(
+			_elm_lang$core$Basics_ops['++'],
+			'top ',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				timeLabel,
+				A2(_elm_lang$core$Basics_ops['++'], ', left ', timeLabel)));
 		var onWhirlpool = A2(_user$project$Actor$onWhirlpool, actor, mapSize);
-		var transform = function () {
-			var _p8 = actor.subtype;
-			switch (_p8.ctor) {
-				case 'WHIRLPOOL':
-					return whirlpoolTransform;
-				case 'PLAYER':
-					return onWhirlpool ? whirlpoolTransform : directionTransform;
-				default:
-					return directionTransform;
-			}
-		}();
 		return A2(
 			_elm_lang$html$Html$img,
 			_elm_lang$core$Native_List.fromArray(
@@ -10593,12 +10804,12 @@ var _user$project$Main$viewActor = F3(
 			_elm_lang$core$Native_List.fromArray(
 				[]));
 	});
-var _user$project$Main$viewActors = F4(
-	function (whirlpoolAngle, actors, mapSize, randomInt) {
+var _user$project$Main$viewActors = F3(
+	function (actors, mapSize, randomInt) {
 		return (!_elm_lang$core$Native_Utils.eq(randomInt, 0)) ? A2(
 			_elm_lang$core$List$map,
 			function (actor) {
-				return A3(_user$project$Main$viewActor, whirlpoolAngle, actor, mapSize);
+				return A2(_user$project$Main$viewActor, actor, mapSize);
 			},
 			actors) : _elm_lang$core$Native_List.fromArray(
 			[]);
@@ -10680,7 +10891,7 @@ var _user$project$Main$viewMapTiles = function (listOfRows) {
 			listOfRows));
 };
 var _user$project$Main$view = function (model) {
-	var whirlpoolAngle = model.whirlpoolAngle;
+	var actors = model.map.actors;
 	var mapSize = model.map.size;
 	var player = _user$project$Map$getPlayer(model.map);
 	return A2(
@@ -10733,7 +10944,7 @@ var _user$project$Main$view = function (model) {
 										{ctor: '_Tuple2', _0: 'visibility', _1: 'visible'}
 									]))
 							]),
-						A4(_user$project$Main$viewActors, whirlpoolAngle, model.map.actors, mapSize, model.randomSeed))
+						A3(_user$project$Main$viewActors, actors, mapSize, model.randomSeed))
 					]))
 			]));
 };
