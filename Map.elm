@@ -9,15 +9,16 @@ module Map
         , rotateWhirlpools
         , movePirates
         , getGameState
+        , getActorsFromRecord
         )
 
 import Random
-import Debug
 import Direction exposing (Direction(..))
 import Location exposing (Location)
 import Actor
 import Actor exposing (Actor, ActorType(..))
 import RandomHelper
+import List.Extra
 
 
 type GameState
@@ -26,10 +27,19 @@ type GameState
     | GAME_OVER
 
 
+type alias ActorRecord =
+    { islands : List Actor
+    , whirlpools : List Actor
+    , pirates : List Actor
+    , wreckages : List Actor
+    , player : Actor
+    }
+
+
 type alias Map =
     { size : Int
     , level : Int
-    , actors : List Actor
+    , actors : ActorRecord
     , tiles : List (List Location)
     }
 
@@ -44,11 +54,11 @@ initMap size level seedNum =
         seed =
             Random.initialSeed seedNum
 
-        whirlpools =
-            initWhirlpools size
-
         islands =
             initIslands size seed
+
+        whirlpools =
+            initWhirlpools size
 
         player =
             initPlayer size
@@ -59,18 +69,47 @@ initMap size level seedNum =
         pirates =
             initPirates size level seed actors
 
-        newActors =
-            whirlpools ++ islands ++ pirates ++ [ player ]
+        wreckages =
+            []
+
+        actorRecord =
+            ActorRecord islands whirlpools pirates wreckages player
 
         tiles =
             initTiles size
     in
-        Map size level newActors tiles
+        Map size level actorRecord tiles
+
+
+getActorsFromRecord : ActorRecord -> List Actor
+getActorsFromRecord record =
+    let
+        actorTuple =
+            ( record.islands
+            , record.whirlpools
+            , record.pirates
+            , record.wreckages
+            , record.player
+            )
+    in
+        getActors actorTuple
+
+
+getActors : ( List Actor, List Actor, List Actor, List Actor, Actor ) -> List Actor
+getActors ( islands, whirlpools, pirates, wreckages, player ) =
+    let
+        piratesAndWreckages =
+            pirates ++ wreckages
+
+        sortedPiratesAndWreckages =
+            (List.sortBy .id piratesAndWreckages)
+    in
+        islands ++ whirlpools ++ sortedPiratesAndWreckages ++ [ player ]
 
 
 initPlayer : Int -> Actor
 initPlayer mapSize =
-    Actor PLAYER (Location (mapSize // 2) (mapSize // 2)) SOUTH
+    Actor PLAYER (Location (mapSize // 2) (mapSize // 2)) SOUTH 0
 
 
 initTiles : Int -> List (List Location)
@@ -98,7 +137,7 @@ initWhirlpools size =
             List.map
                 (\row ->
                     List.map
-                        (\col -> Actor WHIRLPOOL (Location (row * maxIndex) (col * maxIndex)) NORTH)
+                        (\col -> Actor WHIRLPOOL (Location (row * maxIndex) (col * maxIndex)) NORTH 0)
                         [0..1]
                 )
                 [0..1]
@@ -138,7 +177,7 @@ initIsland size seed =
         ( y, seed2 ) =
             Random.step (Random.int 1 (size - 2)) seed1
     in
-        Actor ISLAND (Location x y) NORTH
+        Actor ISLAND (Location x y) NORTH 0
 
 
 initPirates : Int -> Int -> Random.Seed -> List Actor -> List Actor
@@ -148,17 +187,20 @@ initPirates size level seed actors =
             2
 
         -- TODO: Use level and size to determine
-        seeds =
-            RandomHelper.makeSeeds seed numPirates
+        seedTuples =
+            RandomHelper.makeSeedTuples seed numPirates
 
         pirates =
-            List.map (\seed -> initPirate size level seed actors) seeds
+            List.map (\( id, seed ) -> initPirate size level id seed actors) seedTuples
+
+        uniquePirates =
+            List.Extra.uniqueBy (\pirate -> ( pirate.location.x, pirate.location.y )) pirates
     in
-        pirates
+        uniquePirates
 
 
-initPirate : Int -> Int -> Random.Seed -> List Actor -> Actor
-initPirate size level seed actors =
+initPirate : Int -> Int -> Int -> Random.Seed -> List Actor -> Actor
+initPirate size level id seed actors =
     let
         ( x, seed1 ) =
             Random.step (Random.int 0 (size - 1)) seed
@@ -170,9 +212,9 @@ initPirate size level seed actors =
             Location x y
     in
         if hasActor loc actors then
-            initPirate size level seed2 actors
+            initPirate size level id seed2 actors
         else
-            Actor PIRATE loc SOUTH
+            Actor PIRATE loc SOUTH id
 
 
 
@@ -182,21 +224,8 @@ initPirate size level seed actors =
 getPlayer : Map -> Actor
 getPlayer map =
     let
-        actors =
-            map.actors
-
-        players =
-            List.filter
-                Actor.isPlayer
-                actors
-
         player =
-            case List.head players of
-                Nothing ->
-                    Debug.crash ("No player found")
-
-                Just actor ->
-                    actor
+            map.actors.player
     in
         player
 
@@ -217,10 +246,10 @@ getGameState map =
             getPlayer map
 
         pirates =
-            List.filter Actor.isPirate map.actors
+            map.actors.pirates
 
         collidingPirates =
-            List.filter (\actor -> actor.subtype == PIRATE && actor.location == player.location) map.actors
+            List.filter (\actor -> actor.location == player.location) pirates
     in
         if not (List.isEmpty collidingPirates) then
             GAME_OVER
@@ -237,9 +266,6 @@ getGameState map =
 moveActor : Actor -> Int -> Int -> Map -> Map
 moveActor movingActor x y map =
     let
-        otherActors =
-            List.filter (\otherActor -> movingActor /= otherActor) map.actors
-
         isAdjacentTile =
             Location.isAdjacentTile (movingActor.location) (Location x y)
 
@@ -249,8 +275,23 @@ moveActor movingActor x y map =
         updatedMovingActor =
             Actor.move dir movingActor
 
+        actors =
+            map.actors
+
         updatedActors =
-            otherActors ++ [ updatedMovingActor ]
+            case movingActor.subtype of
+                PLAYER ->
+                    { actors | player = updatedMovingActor }
+
+                PIRATE ->
+                    let
+                        otherPirates =
+                            List.filter (\pirate -> pirate.id /= movingActor.id) actors.pirates
+                    in
+                        { actors | pirates = otherPirates ++ [ updatedMovingActor ] }
+
+                _ ->
+                    actors
     in
         if isAdjacentTile then
             { map | actors = updatedActors }
@@ -269,19 +310,31 @@ movePirates playerX playerY map =
         playerLocation =
             Location playerX playerY
 
-        ( players, nonPlayerActors ) =
-            List.partition Actor.isPlayer map.actors
+        actors =
+            map.actors
 
-        ( pirates, nonShipActors ) =
-            List.partition Actor.isPirate nonPlayerActors
+        pirates =
+            map.actors.pirates
 
         movedPirates =
             List.map (movePirate playerLocation) pirates
 
-        piratesAndWreckages =
-            getPiratesAndWreckages nonShipActors movedPirates
+        actorsAfterMovedPirates =
+            { actors | pirates = movedPirates }
+
+        ( livingPirates, newWreckages ) =
+            getPiratesAndWreckages actorsAfterMovedPirates
+
+        wreckages =
+            actors.wreckages ++ newWreckages
     in
-        { map | actors = (nonShipActors ++ piratesAndWreckages ++ players) }
+        { map
+            | actors =
+                { actors
+                    | pirates = livingPirates
+                    , wreckages = wreckages
+                }
+        }
 
 
 movePirate : Location -> Actor -> Actor
@@ -300,23 +353,26 @@ movePirate playerLocation pirate =
         }
 
 
-getPiratesAndWreckages : List Actor -> List Actor -> List Actor
-getPiratesAndWreckages otherActors pirates =
+getPiratesAndWreckages : ActorRecord -> ( List Actor, List Actor )
+getPiratesAndWreckages actorRecord =
     let
-        initialActors =
-            otherActors ++ pirates
+        pirates =
+            actorRecord.pirates
+
+        actorList =
+            getActorsFromRecord actorRecord
 
         ( livingPirates, crashedPirates ) =
             List.partition
                 (\pirate ->
-                    List.isEmpty (List.filter (\actor -> pirate /= actor && pirate.location == actor.location) initialActors)
+                    List.isEmpty (List.filter (\actor -> pirate /= actor && pirate.location == actor.location) actorList)
                 )
                 pirates
 
         wreckages =
-            List.map (\actor -> Actor WRECKAGE actor.location NORTH) crashedPirates
+            List.map (\actor -> Actor WRECKAGE actor.location NORTH actor.id) crashedPirates
     in
-        livingPirates ++ wreckages
+        ( livingPirates, wreckages )
 
 
 fireCannons : Actor -> Map -> Map
@@ -332,15 +388,12 @@ rotateWhirlpools : Map -> Map
 rotateWhirlpools map =
     let
         whirlpools =
-            List.filter (Actor.isWhirlpool) map.actors
-
-        otherActors =
-            List.filter (\actor -> not (Actor.isWhirlpool actor)) map.actors
+            map.actors.whirlpools
 
         rotatedWhirlpools =
             List.map (Actor.rotateClockwise) whirlpools
 
-        updatedActors =
-            rotatedWhirlpools ++ otherActors
+        actors =
+            map.actors
     in
-        { map | actors = updatedActors }
+        { map | actors = { actors | whirlpools = rotatedWhirlpools } }

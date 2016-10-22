@@ -95,8 +95,13 @@ update msg model =
                 ( updatedMap, enableInput ) =
                     case actor.subtype of
                         PLAYER ->
-                            ( Map.fireCannons actor model.map, False )
+                            let
+                                ( x, y ) =
+                                    ( actor.location.x, actor.location.y )
+                            in
+                                ( Map.movePirates x y model.map, False )
 
+                        --( Map.fireCannons actor model.map, False )
                         WHIRLPOOL ->
                             ( Map.movePlayer actor.location.x actor.location.y model.map, False )
 
@@ -270,7 +275,7 @@ view model =
             model.map.size
 
         actors =
-            model.map.actors
+            Map.getActorsFromRecord model.map.actors
     in
         div
             [ class "game"

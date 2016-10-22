@@ -28,6 +28,7 @@ type alias Actor =
     { subtype : ActorType
     , location : Location
     , direction : Direction
+    , id : Int
     }
 
 
