@@ -216,16 +216,18 @@ getGameState map =
         player =
             getPlayer map
 
+        pirates =
+            List.filter Actor.isPirate map.actors
+
         collidingPirates =
             List.filter (\actor -> actor.subtype == PIRATE && actor.location == player.location) map.actors
-
-        newGameState =
-            if not (List.isEmpty collidingPirates) then
-                GAME_OVER
-            else
-                PLAYING
     in
-        newGameState
+        if not (List.isEmpty collidingPirates) then
+            GAME_OVER
+        else if (List.isEmpty pirates) then
+            NEXT_LEVEL
+        else
+            PLAYING
 
 
 
