@@ -27,6 +27,7 @@ type GameState
     | NextLevel2
     | GameOver
     | GameOver2
+    | Loading
 
 
 type alias ActorRecord =

@@ -171,21 +171,25 @@ update msg model =
                             GameOver2 ->
                                 ( { model
                                     | message = (Just "Game Over!")
-                                    , gameState = Playing
+                                    , map = { map | level = 1 }
+                                    , gameState = Loading
                                   }
                                 , randomSeedCmd
                                 )
 
                             NextLevel ->
+                                ( { model | gameState = NextLevel2 }, Cmd.none )
+
+                            NextLevel2 ->
                                 ( { model
                                     | message = (Just ("Level " ++ (toString (level + 1)) ++ "!"))
                                     , map = { map | level = level + 1 }
-                                    , gameState = NextLevel2
+                                    , gameState = Loading
                                   }
                                 , randomSeedCmd
                                 )
 
-                            NextLevel2 ->
+                            Loading ->
                                 ( { model | gameState = Playing }, Cmd.none )
                     else
                         ( model, Cmd.none )
