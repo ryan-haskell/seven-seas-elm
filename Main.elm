@@ -24,6 +24,11 @@ animationTime =
     500
 
 
+mapSize : Int
+mapSize =
+    9
+
+
 
 -- MODEL
 
@@ -34,13 +39,20 @@ type alias Model =
     , timeSinceMove : Time
     , enableInput : Bool
     , gameState : GameState
+    , message : Maybe String
     }
+
+
+randomSeedCmd : Cmd Msg
+randomSeedCmd =
+    Random.generate SetRandomSeed (Random.int Random.minInt Random.maxInt)
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model (Map.initMap 7 1 0) 0 0 True PLAYING
-    , Random.generate SetRandomSeed (Random.int Random.minInt Random.maxInt)
+    ( Model (Map.initMap mapSize 1 0) 0 0 True Playing Nothing
+      --(Just "Level 1!")
+    , randomSeedCmd
     )
 
 
@@ -127,7 +139,7 @@ update msg model =
 
         SetRandomSeed seed ->
             ( { model
-                | map = Map.initMap 7 1 seed
+                | map = Map.initMap mapSize model.map.level seed
                 , randomSeed = seed
               }
             , Cmd.none
@@ -141,13 +153,46 @@ update msg model =
                     else
                         model.timeSinceMove + time
 
-                enableInput =
-                    if updatedTime == 0 && model.gameState == PLAYING then
-                        True
+                map =
+                    model.map
+
+                level =
+                    map.level
+
+                ( updatedModel, updatedCommand ) =
+                    if updatedTime == 0 then
+                        case model.gameState of
+                            Playing ->
+                                ( { model | enableInput = True, message = Nothing }, Cmd.none )
+
+                            GameOver ->
+                                ( { model | gameState = GameOver2 }, Cmd.none )
+
+                            GameOver2 ->
+                                ( { model
+                                    | message = (Just "Game Over!")
+                                    , gameState = Playing
+                                  }
+                                , randomSeedCmd
+                                )
+
+                            NextLevel ->
+                                ( { model
+                                    | message = (Just ("Level " ++ (toString (level + 1)) ++ "!"))
+                                    , map = { map | level = level + 1 }
+                                    , gameState = NextLevel2
+                                  }
+                                , randomSeedCmd
+                                )
+
+                            NextLevel2 ->
+                                ( { model | gameState = Playing }, Cmd.none )
                     else
-                        model.enableInput
+                        ( model, Cmd.none )
             in
-                ( { model | timeSinceMove = updatedTime, enableInput = enableInput }, Cmd.none )
+                ( { updatedModel | timeSinceMove = updatedTime }
+                , updatedCommand
+                )
 
         None ->
             ( model, Cmd.none )
@@ -304,6 +349,32 @@ view model =
                     [ style [ ( "visibility", "visible" ) ] ]
                     (viewActors actors mapSize model.randomSeed)
                 ]
+            , h3
+                [ style
+                    [ ( "position", "absolute" )
+                    , ( "top", "0" )
+                    , ( "left", "0" )
+                    , ( "margin", "0" )
+                    , ( "cursor", "default" )
+                    , ( "width", "100%" )
+                    , ( "height", "100%" )
+                    , ( "justify-content", "center" )
+                    , ( "align-items", "center" )
+                    , ( "background-color", "#069" )
+                    , ( "color", "white" )
+                    , ( "font-family", "Arial" )
+                    , ( "display"
+                      , (case model.message of
+                            Just str ->
+                                "flex"
+
+                            Nothing ->
+                                "none"
+                        )
+                      )
+                    ]
+                ]
+                [ text (Maybe.withDefault "" model.message) ]
             ]
 
 

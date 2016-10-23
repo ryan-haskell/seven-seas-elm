@@ -22,9 +22,11 @@ import List.Extra
 
 
 type GameState
-    = PLAYING
-    | NEXT_LEVEL
-    | GAME_OVER
+    = Playing
+    | NextLevel
+    | NextLevel2
+    | GameOver
+    | GameOver2
 
 
 type alias ActorRecord =
@@ -184,7 +186,7 @@ initPirates : Int -> Int -> Random.Seed -> List Actor -> List Actor
 initPirates size level seed actors =
     let
         numPirates =
-            2
+            level + 1
 
         -- TODO: Use level and size to determine
         seedTuples =
@@ -248,15 +250,18 @@ getGameState map =
         pirates =
             map.actors.pirates
 
+        wreckages =
+            map.actors.wreckages
+
         collidingPirates =
-            List.filter (\actor -> actor.location == player.location) pirates
+            List.filter (\actor -> actor.location == player.location) wreckages
     in
         if not (List.isEmpty collidingPirates) then
-            GAME_OVER
+            GameOver
         else if (List.isEmpty pirates) then
-            NEXT_LEVEL
+            NextLevel
         else
-            PLAYING
+            Playing
 
 
 
