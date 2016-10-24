@@ -40,19 +40,25 @@ type alias Model =
     , enableInput : Bool
     , gameState : GameState
     , message : Maybe String
+    , whirlpoolAngle : Int
     }
 
 
-randomSeedCmd : Cmd Msg
-randomSeedCmd =
-    Random.generate SetRandomSeed (Random.int Random.minInt Random.maxInt)
+newLevelCmd : Cmd Msg
+newLevelCmd =
+    Random.generate NewLevel (Random.int Random.minInt Random.maxInt)
+
+
+newSeedCmd : Cmd Msg
+newSeedCmd =
+    Random.generate NewSeed (Random.int Random.minInt Random.maxInt)
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model (Map.initMap mapSize 1 0) 0 0 True Playing Nothing
+    ( Model (Map.initMap mapSize 1 0) 0 0 True Playing Nothing 0
       --(Just "Level 1!")
-    , randomSeedCmd
+    , newLevelCmd
     )
 
 
@@ -63,7 +69,8 @@ init =
 type Msg
     = TileClicked Int Int
     | ActorClicked Actor
-    | SetRandomSeed Int
+    | NewLevel Int
+    | NewSeed Int
     | HandleTimeDiff Time
     | None
 
@@ -137,11 +144,16 @@ update msg model =
                 , Cmd.none
                 )
 
-        SetRandomSeed seed ->
+        NewLevel seedNum ->
             ( { model
-                | map = Map.initMap mapSize model.map.level seed
-                , randomSeed = seed
+                | map = Map.initMap mapSize model.map.level seedNum
+                , randomSeed = seedNum
               }
+            , Cmd.none
+            )
+
+        NewSeed seedNum ->
+            ( { model | randomSeed = seedNum }
             , Cmd.none
             )
 
@@ -174,7 +186,7 @@ update msg model =
                                     , map = { map | level = 1 }
                                     , gameState = Loading
                                   }
-                                , randomSeedCmd
+                                , newLevelCmd
                                 )
 
                             NextLevel ->
@@ -186,7 +198,20 @@ update msg model =
                                     , map = { map | level = level + 1 }
                                     , gameState = Loading
                                   }
-                                , randomSeedCmd
+                                , newLevelCmd
+                                )
+
+                            WhirlpoolSpin ->
+                                ( { model | gameState = WhirlpoolLand }
+                                , newSeedCmd
+                                )
+
+                            WhirlpoolLand ->
+                                ( { model
+                                    | map = (Map.whirlpoolPlayer map model.randomSeed)
+                                    , gameState = Loading
+                                  }
+                                , Cmd.none
                                 )
 
                             Loading ->
@@ -194,7 +219,10 @@ update msg model =
                     else
                         ( model, Cmd.none )
             in
-                ( { updatedModel | timeSinceMove = updatedTime }
+                ( { updatedModel
+                    | timeSinceMove = updatedTime
+                    , whirlpoolAngle = model.whirlpoolAngle + 5
+                  }
                 , updatedCommand
                 )
 
@@ -266,26 +294,51 @@ getTileSize size =
     "calc( 100vmin / " ++ toString size ++ " )"
 
 
-viewActor : Actor -> Int -> Html Msg
-viewActor actor mapSize =
+viewActor : Actor -> Int -> Int -> Html Msg
+viewActor actor mapSize whirlpoolAngle =
     let
         onWhirlpool =
-            Actor.onWhirlpool actor mapSize
+            (Actor.onWhirlpool actor mapSize) && (actor.subtype == PLAYER)
 
         timeLabel =
             (toString (animationTime / 1000)) ++ "s"
 
-        transition =
+        defaultTransition =
             "top "
                 ++ timeLabel
                 ++ ", left "
                 ++ timeLabel
 
+        whirlpoolTransition =
+            defaultTransition
+                ++ ", transform "
+                ++ timeLabel
+
         actorAngle =
             (Direction.getAngle actor.direction)
 
-        transform =
+        defaultTransform =
             "rotate(" ++ (toString actorAngle) ++ "deg)"
+
+        whirlpoolTransform =
+            "rotate(" ++ (toString whirlpoolAngle) ++ "deg)"
+
+        spinningTransform =
+            "rotate(" ++ (toString (actorAngle + 360)) ++ "deg)"
+
+        transition =
+            if onWhirlpool then
+                whirlpoolTransition
+            else
+                defaultTransition
+
+        transform =
+            if onWhirlpool then
+                spinningTransform
+            else if actor.subtype == WHIRLPOOL then
+                whirlpoolTransform
+            else
+                defaultTransform
     in
         (img
             [ src ("img/" ++ (String.toLower (toString actor.subtype)) ++ ".svg")
@@ -304,11 +357,11 @@ viewActor actor mapSize =
         )
 
 
-viewActors : List Actor -> Int -> Int -> List (Html Msg)
-viewActors actors mapSize randomInt =
+viewActors : List Actor -> Int -> Int -> Int -> List (Html Msg)
+viewActors actors mapSize whirlpoolAngle randomInt =
     if randomInt /= 0 then
         List.map
-            (\actor -> (viewActor actor mapSize))
+            (\actor -> (viewActor actor mapSize whirlpoolAngle))
             actors
     else
         []
@@ -351,7 +404,7 @@ view model =
                 ]
                 [ div
                     [ style [ ( "visibility", "visible" ) ] ]
-                    (viewActors actors mapSize model.randomSeed)
+                    (viewActors actors mapSize model.whirlpoolAngle model.randomSeed)
                 ]
             , h3
                 [ style

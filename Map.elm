@@ -6,10 +6,10 @@ module Map
         , movePlayer
         , getPlayer
         , fireCannons
-        , rotateWhirlpools
         , movePirates
         , getGameState
         , getActorsFromRecord
+        , whirlpoolPlayer
         )
 
 import Random
@@ -27,6 +27,8 @@ type GameState
     | NextLevel2
     | GameOver
     | GameOver2
+    | WhirlpoolSpin
+    | WhirlpoolLand
     | Loading
 
 
@@ -261,6 +263,8 @@ getGameState map =
             GameOver
         else if (List.isEmpty pirates) then
             NextLevel
+        else if (Actor.onWhirlpool player map.size) then
+            WhirlpoolSpin
         else
             Playing
 
@@ -390,16 +394,57 @@ fireCannons actor map =
         map
 
 
-rotateWhirlpools : Map -> Map
-rotateWhirlpools map =
+whirlpoolPlayer : Map -> Int -> Map
+whirlpoolPlayer map seedNum =
     let
-        whirlpools =
-            map.actors.whirlpools
-
-        rotatedWhirlpools =
-            List.map (Actor.rotateClockwise) whirlpools
+        seed =
+            Random.initialSeed seedNum
 
         actors =
             map.actors
+
+        player =
+            actors.player
+
+        newPlayerLocation =
+            getRandomEmptyLocation map seed
     in
-        { map | actors = { actors | whirlpools = rotatedWhirlpools } }
+        { map
+            | actors =
+                { actors
+                    | player =
+                        { player
+                            | location = newPlayerLocation
+                        }
+                }
+        }
+
+
+getRandomEmptyLocation : Map -> Random.Seed -> Location
+getRandomEmptyLocation map seed =
+    let
+        ( x, seed1 ) =
+            Random.step (Random.int 1 (map.size - 1)) seed
+
+        ( y, seed2 ) =
+            Random.step (Random.int 1 (map.size - 1)) seed1
+
+        isEmptyLocation =
+            isEmptyTile map.actors (Location x y)
+    in
+        if isEmptyLocation then
+            (Location x y)
+        else
+            getRandomEmptyLocation map seed2
+
+
+isEmptyTile : ActorRecord -> Location -> Bool
+isEmptyTile actorRecord location =
+    let
+        actorList =
+            getActorsFromRecord actorRecord
+
+        actorsAtLoc =
+            List.filter (\actor -> actor.location == location) actorList
+    in
+        List.isEmpty actorsAtLoc
