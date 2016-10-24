@@ -10,6 +10,8 @@ module Map
         , getGameState
         , getActorsFromRecord
         , whirlpoolPlayer
+        , advanceCannons
+        , removeCannons
         )
 
 import Random
@@ -29,6 +31,11 @@ type GameState
     | GameOver2
     | WhirlpoolSpin
     | WhirlpoolLand
+    | FireCannons
+    | FireCannons2
+    | FireCannons3
+    | FireCannons4
+    | MovePirates
     | Loading
 
 
@@ -38,6 +45,7 @@ type alias ActorRecord =
     , pirates : List Actor
     , wreckages : List Actor
     , player : Actor
+    , cannonballs : List Actor
     }
 
 
@@ -77,8 +85,11 @@ initMap size level seedNum =
         wreckages =
             []
 
+        cannonballs =
+            []
+
         actorRecord =
-            ActorRecord islands whirlpools pirates wreckages player
+            ActorRecord islands whirlpools pirates wreckages player cannonballs
 
         tiles =
             initTiles size
@@ -95,13 +106,14 @@ getActorsFromRecord record =
             , record.pirates
             , record.wreckages
             , record.player
+            , record.cannonballs
             )
     in
         getActors actorTuple
 
 
-getActors : ( List Actor, List Actor, List Actor, List Actor, Actor ) -> List Actor
-getActors ( islands, whirlpools, pirates, wreckages, player ) =
+getActors : ( List Actor, List Actor, List Actor, List Actor, Actor, List Actor ) -> List Actor
+getActors ( islands, whirlpools, pirates, wreckages, player, cannonballs ) =
     let
         piratesAndWreckages =
             pirates ++ wreckages
@@ -109,7 +121,7 @@ getActors ( islands, whirlpools, pirates, wreckages, player ) =
         sortedPiratesAndWreckages =
             (List.sortBy .id piratesAndWreckages)
     in
-        islands ++ whirlpools ++ sortedPiratesAndWreckages ++ [ player ]
+        islands ++ whirlpools ++ sortedPiratesAndWreckages ++ [ player ] ++ cannonballs
 
 
 initPlayer : Int -> Actor
@@ -256,6 +268,9 @@ getGameState map =
         wreckages =
             map.actors.wreckages
 
+        cannonballs =
+            map.actors.cannonballs
+
         collidingPirates =
             List.filter (\actor -> actor.location == player.location) wreckages
     in
@@ -263,6 +278,8 @@ getGameState map =
             GameOver
         else if (List.isEmpty pirates) then
             NextLevel
+        else if (not (List.isEmpty cannonballs)) then
+            FireCannons
         else if (Actor.onWhirlpool player map.size) then
             WhirlpoolSpin
         else
@@ -314,11 +331,11 @@ movePlayer x y map =
     moveActor (getPlayer map) x y map
 
 
-movePirates : Int -> Int -> Map -> Map
-movePirates playerX playerY map =
+movePirates : Map -> Map
+movePirates map =
     let
         playerLocation =
-            Location playerX playerY
+            map.actors.player.location
 
         actors =
             map.actors
@@ -388,10 +405,58 @@ getPiratesAndWreckages actorRecord =
 fireCannons : Actor -> Map -> Map
 fireCannons actor map =
     let
-        cannonDirections =
+        ( leftDir, rightDir ) =
             Direction.getSideDirections actor.direction
+
+        actors =
+            map.actors
+
+        cannons =
+            [ Actor CANNONBALL actor.location leftDir 0
+            , Actor CANNONBALL actor.location rightDir 0
+            ]
     in
-        map
+        { map | actors = { actors | cannonballs = actors.cannonballs ++ cannons } }
+
+
+advanceCannons : Map -> Map
+advanceCannons map =
+    let
+        actors =
+            map.actors
+
+        cannonballs =
+            map.actors.cannonballs
+
+        movedCannonballs =
+            List.map (\cannon -> Actor.move cannon.direction cannon) cannonballs
+
+        actorsAfterMovedCannonballs =
+            { actors | cannonballs = movedCannonballs }
+
+        ( livingPirates, newWreckages ) =
+            getPiratesAndWreckages actorsAfterMovedCannonballs
+
+        wreckages =
+            actors.wreckages ++ newWreckages
+    in
+        { map
+            | actors =
+                { actors
+                    | pirates = livingPirates
+                    , wreckages = wreckages
+                    , cannonballs = movedCannonballs
+                }
+        }
+
+
+removeCannons : Map -> Map
+removeCannons map =
+    let
+        actors =
+            map.actors
+    in
+        { map | actors = { actors | cannonballs = [] } }
 
 
 whirlpoolPlayer : Map -> Int -> Map

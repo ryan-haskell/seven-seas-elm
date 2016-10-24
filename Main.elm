@@ -88,7 +88,7 @@ update msg model =
 
                 ( updatedMap, enableInput ) =
                     if playerUpdated then
-                        ( Map.movePirates x y playerMovedMap, False )
+                        ( Map.movePirates playerMovedMap, False )
                     else
                         ( model.map, True )
 
@@ -114,13 +114,8 @@ update msg model =
                 ( updatedMap, enableInput ) =
                     case actor.subtype of
                         PLAYER ->
-                            let
-                                ( x, y ) =
-                                    ( actor.location.x, actor.location.y )
-                            in
-                                ( Map.movePirates x y model.map, False )
+                            ( Map.fireCannons actor model.map, False )
 
-                        --( Map.fireCannons actor model.map, False )
                         WHIRLPOOL ->
                             ( Map.movePlayer actor.location.x actor.location.y model.map, False )
 
@@ -210,6 +205,46 @@ update msg model =
                                 ( { model
                                     | map = (Map.whirlpoolPlayer map model.randomSeed)
                                     , gameState = Loading
+                                  }
+                                , Cmd.none
+                                )
+
+                            FireCannons ->
+                                ( { model
+                                    | map = (Map.advanceCannons map)
+                                    , gameState = FireCannons2
+                                  }
+                                , Cmd.none
+                                )
+
+                            FireCannons2 ->
+                                ( { model
+                                    | map = (Map.advanceCannons map)
+                                    , gameState = FireCannons3
+                                  }
+                                , Cmd.none
+                                )
+
+                            FireCannons3 ->
+                                ( { model
+                                    | map = (Map.advanceCannons map)
+                                    , gameState = FireCannons4
+                                  }
+                                , Cmd.none
+                                )
+
+                            FireCannons4 ->
+                                ( { model
+                                    | map = (Map.removeCannons map)
+                                    , gameState = MovePirates
+                                  }
+                                , Cmd.none
+                                )
+
+                            MovePirates ->
+                                ( { model
+                                    | map = (Map.movePirates model.map)
+                                    , gameState = Map.getGameState (Map.movePirates model.map)
                                   }
                                 , Cmd.none
                                 )
@@ -386,6 +421,7 @@ view model =
                 [ ( "height", "100%" )
                 , ( "overflow", "hidden" )
                 , ( "cursor", "pointer" )
+                , ( "background-color", "black" )
                 ]
             ]
             [ viewMapTiles model.map.tiles
